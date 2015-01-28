@@ -1,5 +1,7 @@
 package readBishan;
 
+import java.util.ArrayList;
+
 public class DirectNode {
   public String agent;
   public String sentence;
