@@ -10,6 +10,8 @@ public class Run {
 		
 		ReadBishanHolder r = new ReadBishanHolder(docId);
 		ReadBishanSentiment s = new ReadBishanSentiment(docId);
+		ReadBishanTogether t = new ReadBishanTogether(docId);
+		System.out.println(t.sentenceHash.size());
 		
 	}
 
