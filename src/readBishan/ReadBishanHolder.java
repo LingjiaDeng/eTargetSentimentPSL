@@ -22,14 +22,16 @@ public class ReadBishanHolder {
 		Pattern pattern = Pattern.compile("([a-zA-Z0-9\\-_\\.]+\\\\[a-zA-Z0-9\\-_\\.]+)\\.bishan$");
 		Matcher match = pattern.matcher(docId);
 		if (match.find()){
-			run();
+			File f = new File(this.filePath);
+			if (f.exists())
+				run(f);
 		}
 		else{
 			System.out.println("Invalid DocId");
 		}
 	}
 	
-	private void run() throws IOException{
+	private void run(File f) throws IOException{
 		// initialize
 		ArrayList<DirectNode> directs = new ArrayList<DirectNode>();
 		String sentence = "";
@@ -40,7 +42,6 @@ public class ReadBishanHolder {
 		ArrayList<String> targets = new ArrayList<String>();
 		ArrayList<String> targetTags = new ArrayList<String>();
 		
-		File f = new File(this.filePath);
 		FileReader fr = new FileReader(f);
 		BufferedReader br = new BufferedReader(fr);
 		String line = "";

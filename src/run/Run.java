@@ -9,6 +9,7 @@ public class Run {
 		String docId = "temp_fbis\\22.36.40-5626.bishan";
 		
 		ReadBishanHolder r = new ReadBishanHolder(docId);
+		ReadBishanSentiment s = new ReadBishanSentiment(docId);
 		
 	}
 

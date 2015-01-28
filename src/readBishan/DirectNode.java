@@ -7,7 +7,9 @@ public class DirectNode {
   public String sentence;
   public String span;
   public ArrayList<String> targets;
+  public String polarity;
   public boolean overlapped;
+  
   
   public DirectNode(){
     this.agent = "";
@@ -15,6 +17,7 @@ public class DirectNode {
     this.span = "";
     this.targets = new ArrayList<String>();
     this.overlapped = false;
+    this.polarity = "";
   }
 
 }
