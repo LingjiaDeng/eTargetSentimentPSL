@@ -2,5 +2,51 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/xstream.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/xpp3.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/xmlunit.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/xmlbeans.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/woodstox-core-lgpl.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/tika-parsers.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/tika-core.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/stax2-api.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/spring-core.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/spring-beans.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/spring-aop.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/poi-scratchpad.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/poi-ooxml-schemas.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/poi-ooxml.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/poi.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/pdfbox.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/nekohtml.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/metadata-extractor.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/lucene-core.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/log4j.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/junit.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/jempbox.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/jdom.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/jaxen.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/java-getopt.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/ivy.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/gate-compiler-jdt.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/gate-asm.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/fontbox.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/flying-saucer-core.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/dom4j.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/commons-logging.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/commons-lang.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/commons-io.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/commons-compress.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/commons-codec.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/bcprov-jdk15.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/bcmail-jdk15.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/apache-mime4j-dom.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/apache-mime4j-core.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/aopalliance.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/ant-launcher.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/ant.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/bin/gate.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2013-06-20/stanford-corenlp-3.2.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
