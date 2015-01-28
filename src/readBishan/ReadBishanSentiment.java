@@ -9,25 +9,25 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import utils.Path;
+
 public class ReadBishanSentiment {
 	public String filePath;
 	public HashMap<String,ArrayList<DirectNode>> sentenceHash;
 	
 	
 	public ReadBishanSentiment(String docId) throws IOException{
-		Path p = new Path();
-		this.filePath = p.root+"Bishan_sentiment/allOutputs/"+docId;
+		this.filePath = Path.getRoot()+"Bishan_sentiment/allOutputs/"+docId;
 		this.sentenceHash = new HashMap<String,ArrayList<DirectNode>>();
 		
 		Pattern pattern = Pattern.compile("([a-zA-Z0-9\\-_\\.]+\\\\[a-zA-Z0-9\\-_\\.]+)\\.bishan$");
 		Matcher match = pattern.matcher(docId);
 		if (match.find()){
 			File f = new File(this.filePath);
-			if (f.exists())
-				run(f);
+			run(f);
 		}
 		else{
-			System.out.println("Invalid DocId");
+			System.out.println("Invalid DocId:"+docId);
 		}
 	}
 	

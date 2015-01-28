@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import utils.Overlap;
+
 public class ReadBishanTogether {
 	public HashMap<String,ArrayList<DirectNode>> sentenceHash; 
 	
@@ -38,7 +40,7 @@ public class ReadBishanTogether {
 				for (int i=0;i<sentiments.size();i++){
 					DirectNode sentiment = sentiments.get(i);
 					for (DirectNode holder:holders){
-						if (overlap(holder.sentence,sentiment.sentence)){
+						if (Overlap.subStringOverlap(holder.sentence,sentiment.sentence)){
 							holder.overlapped = true;
 							sentiment.span = sentiment.span.trim();
 							sentiment.agent = holder.agent.trim();
@@ -65,13 +67,6 @@ public class ReadBishanTogether {
 		}  // for each sentence
 		
 		this.sentenceHash = sentimentSens;
-	}
-	
-	private boolean overlap(String s1, String s2){
-		if (s1.contains(s2) || s2.contains(s1))
-			return true;
-		
-		return false;
 	}
 
 }
