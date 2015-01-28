@@ -13,6 +13,8 @@ public class Run {
 		ReadBishanTogether t = new ReadBishanTogether(docId);
 		System.out.println(t.sentenceHash.size());
 		
+		System.out.println("0457");
+		
 	}
 
 }
