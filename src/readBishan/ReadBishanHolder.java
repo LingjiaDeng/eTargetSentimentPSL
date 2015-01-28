@@ -2,7 +2,6 @@ package readBishan;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,19 +16,17 @@ public class ReadBishanHolder {
 	
 	public ReadBishanHolder(String docId) throws IOException{
 		Path p = new Path();
-		this.filePath = p.root+"holder/"+docId;
+		this.filePath = p.root+"Bishan_holder/allOutputs/"+docId;
 		this.sentenceHash = new HashMap<String,ArrayList<DirectNode>>();
 		
-		Pattern pattern = Pattern.compile("/([a-zA-Z0-9\\-_\\.]+/[a-zA-Z0-9\\-_\\.]+)\\.bishan$");
+		Pattern pattern = Pattern.compile("/([a-zA-Z0-9\\-_\\.]+\\\\[a-zA-Z0-9\\-_\\.]+)\\.bishan$");
 		Matcher match = pattern.matcher(docId);
 		if (match.find()){
 			run();
 		}
-		
-		
-		
-		
-		
+		else{
+			System.out.println("Invalid DocId");
+		}
 	}
 	
 	private void run() throws IOException{
