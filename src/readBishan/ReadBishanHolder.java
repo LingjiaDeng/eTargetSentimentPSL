@@ -19,7 +19,7 @@ public class ReadBishanHolder {
 		this.filePath = p.root+"Bishan_holder/allOutputs/"+docId;
 		this.sentenceHash = new HashMap<String,ArrayList<DirectNode>>();
 		
-		Pattern pattern = Pattern.compile("/([a-zA-Z0-9\\-_\\.]+\\\\[a-zA-Z0-9\\-_\\.]+)\\.bishan$");
+		Pattern pattern = Pattern.compile("([a-zA-Z0-9\\-_\\.]+\\\\[a-zA-Z0-9\\-_\\.]+)\\.bishan$");
 		Matcher match = pattern.matcher(docId);
 		if (match.find()){
 			run();
@@ -58,7 +58,7 @@ public class ReadBishanHolder {
 						ArrayList<String> agentNumbers = new ArrayList<String>();
 						ArrayList<String> targetNumbers = new ArrayList<String>();
 						
-						for (int i=0;i<tags.length;i++){
+						for (int i=2;i<tags.length;i++){
 							if (Integer.parseInt(tags[i])<0)
 								agentNumbers.add(tags[i]);
 							else
@@ -140,11 +140,11 @@ public class ReadBishanHolder {
 		
 		HashMap<String,ArrayList<DirectNode>> sentences = new HashMap<String,ArrayList<DirectNode>>();
 		for (DirectNode d:directs){
-			if (sentences.keySet().contains(d.sentence))
-				sentences.put(sentence, new ArrayList<DirectNode>());
-			ArrayList<DirectNode> tmp = sentences.get(sentence);
+			if (!sentences.keySet().contains(d.sentence))
+				sentences.put(d.sentence, new ArrayList<DirectNode>());
+			ArrayList<DirectNode> tmp = sentences.get(d.sentence);
 			tmp.add(d);
-			sentences.put(sentence, tmp);
+			sentences.put(d.sentence, tmp);
 		}  // for each directNode
 		
 		this.sentenceHash = sentences;
