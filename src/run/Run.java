@@ -1,6 +1,6 @@
 package run;
-import java.io.IOException;
 
+import java.io.IOException;
 import readBishan.*;
 
 public class Run {
@@ -11,7 +11,5 @@ public class Run {
 		ReadBishanSentiment s = new ReadBishanSentiment(docId);
 		ReadBishanTogether t = new ReadBishanTogether(docId);
 		System.out.println(t.sentenceHash.size());
-		
 	}
-
 }
