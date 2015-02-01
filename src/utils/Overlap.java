@@ -12,5 +12,9 @@ public final class Overlap {
 		return false;
 	}
 	
+	public static boolean pureStringOverlap(String s1, String s2){
+		
+		return subStringOverlap(s1.replaceAll("[^a-zA-Z0-9]+", ""),s2.replaceAll("[^a-zA-Z0-9]+", ""));
+	}
 
 }

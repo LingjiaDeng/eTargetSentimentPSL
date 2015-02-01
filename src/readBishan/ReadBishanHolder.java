@@ -49,7 +49,7 @@ public class ReadBishanHolder {
 				if (opinions.size()!= 0){
 					for (int opinionIndex=0;opinionIndex<opinions.size();opinionIndex++){
 						DirectNode anno = new DirectNode();
-						anno.sentence = sentence;
+						anno.sentence = sentence.replaceAll("[^a-zA-Z0-9 ]+", "").replaceAll(" +", " ").trim();
 						anno.span = opinions.get(opinionIndex);
 						
 						// find the number of corresponding agent and target
