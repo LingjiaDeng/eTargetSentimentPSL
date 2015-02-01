@@ -13,10 +13,13 @@ public class ReadBishanTogether {
 	
 	
 	public ReadBishanTogether(String docId) throws IOException{
-		Pattern pattern = Pattern.compile("([a-zA-Z0-9\\-_\\.]+\\\\[a-zA-Z0-9\\-_\\.]+)\\.bishan$");
+		Pattern pattern = Pattern.compile("([a-zA-Z0-9\\-_\\.]+/[a-zA-Z0-9\\-_\\.]+)$");
 		Matcher match = pattern.matcher(docId);
 		if (match.find()){
 			run(docId);
+		}
+		else{
+			System.out.println("Invalid DocId:"+docId);
 		}
 		
 	}
@@ -67,6 +70,7 @@ public class ReadBishanTogether {
 		}  // for each sentence
 		
 		this.sentenceHash = sentimentSens;
+		System.out.println("sentences:"+sentimentSens.size());
 	}
 
 }

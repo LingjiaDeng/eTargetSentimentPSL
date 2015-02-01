@@ -1,15 +1,20 @@
 package run;
 
+import gate.util.GateException;
+
 import java.io.IOException;
 import readBishan.*;
+import readGATE.ReadETarget;
 
 public class Run {
-	public static void main(String[] args) throws IOException{
-		String docId = "temp_fbis\\22.36.40-5626.bishan";
+	public static void main(String[] args) throws IOException, GateException{
+		String docId = "temp_fbis/21.10.31-12974";
 		
-		ReadBishanHolder r = new ReadBishanHolder(docId);
-		ReadBishanSentiment s = new ReadBishanSentiment(docId);
+		//ReadBishanHolder r = new ReadBishanHolder(docId);
+		//ReadBishanSentiment s = new ReadBishanSentiment(docId);
 		ReadBishanTogether t = new ReadBishanTogether(docId);
-		System.out.println(t.sentenceHash.size());
+		
+		ReadETarget g = new ReadETarget(docId);
+		
 	}
 }

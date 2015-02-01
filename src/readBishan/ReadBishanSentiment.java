@@ -17,12 +17,12 @@ public class ReadBishanSentiment {
 	
 	
 	public ReadBishanSentiment(String docId) throws IOException{
-		this.filePath = Path.getRoot()+"Bishan_sentiment/allOutputs/"+docId;
-		this.sentenceHash = new HashMap<String,ArrayList<DirectNode>>();
-		
-		Pattern pattern = Pattern.compile("([a-zA-Z0-9\\-_\\.]+\\\\[a-zA-Z0-9\\-_\\.]+)\\.bishan$");
+		Pattern pattern = Pattern.compile("([a-zA-Z0-9\\-_\\.]+/[a-zA-Z0-9\\-_\\.]+)$");
 		Matcher match = pattern.matcher(docId);
 		if (match.find()){
+			this.filePath = Path.getBishanRoot()+"Bishan_sentiment/allOutputs/"+docId.replace("/","\\")+".bishan";
+			
+			this.sentenceHash = new HashMap<String,ArrayList<DirectNode>>();
 			File f = new File(this.filePath);
 			run(f);
 		}
@@ -102,7 +102,7 @@ public class ReadBishanSentiment {
 		}  // for each directNode
 		
 		this.sentenceHash = sentences;
-		
+		//System.out.println("sentiments: "+sentences.size());
 	}
 
 }
