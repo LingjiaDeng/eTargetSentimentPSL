@@ -43,12 +43,11 @@ public class ReadBishanTogether {
 				for (int i=0;i<sentiments.size();i++){
 					DirectNode sentiment = sentiments.get(i);
 					for (DirectNode holder:holders){
-						if (Overlap.subStringOverlap(holder.sentence,sentiment.sentence)){
+						if (Overlap.subStringOverlap(holder.span,sentiment.span)){
 							holder.overlapped = true;
-							sentiment.span = sentiment.span.trim();
-							sentiment.agent = holder.agent.trim();
+							sentiment.agent = holder.agent;
 							for (String target:holder.targets){
-								sentiment.targets.add(target.trim());
+								sentiment.targets.add(target);
 							}
 							// update in the original sentimentSens
 							ArrayList<DirectNode> tmp = sentimentSens.get(sentence);

@@ -1,10 +1,16 @@
 package readGATE;
 
+import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import edu.stanford.nlp.ling.Word;
+import edu.stanford.nlp.process.PTBTokenizer;
+import edu.stanford.nlp.util.StringUtils;
 
 import readBishan.DirectNode;
 import utils.Overlap;
@@ -38,14 +44,19 @@ public class ReadETarget {
 	}
 	
 	private void run() throws GateException{
-		//ArrayList<String> sentences = new ArrayList<String>();
 		DocumentContent content = this.doc.getContent();
+		JudgeETarget j = new JudgeETarget();
 		
 		AnnotationSet markups = this.doc.getAnnotations("MPQA");
 		markups.addAll(this.doc.getAnnotations());
 		
 		for (Annotation markup:markups.get("inside")){
 			String sentence = content.getContent(markup.getStartNode().getOffset(), markup.getEndNode().getOffset()).toString();
+			// tokenize and get the parse
+			PTBTokenizer<Word> ptb = PTBTokenizer.newPTBTokenizer(new StringReader(sentence));
+			List<Word> words = ptb.tokenize();
+			String sentenceTokenized = StringUtils.join(words);
+			
 			// parse sentence
 			
 			// get the gold standard nodes
@@ -64,28 +75,35 @@ public class ReadETarget {
 			AnnotationSet heads = nodesInSentence.get("head");
 			
 			// match Bishan's result into gate annotations
-			if (!this.bishanSentenceHash.containsKey(sentence.replaceAll("[^a-zA-Z0-9 ]+", "").replaceAll(" +", " ").trim())){
+			if (!this.bishanSentenceHash.containsKey(sentenceTokenized)){
 				continue;
 			}
 			
-			ArrayList<DirectNode> bishans = this.bishanSentenceHash.get(sentence.replaceAll("[^a-zA-Z0-9 ]+", "").replaceAll(" +", " ").trim());
+			ArrayList<DirectNode> bishans = this.bishanSentenceHash.get(sentenceTokenized);
 			for (DirectNode bishan:bishans){
-				for (Annotation subj:subjs){
-					String subjSpan = content.getContent(subj.getStartNode().getOffset(), subj.getEndNode().getOffset()).toString();
-					if (Overlap.subStringOverlap(subjSpan, sentence)){
-						// add more agents
-						if (bishan.agent.isEmpty() || bishan.agent.equals("N/A") || bishan.agent.equals("")){
+				int bishanSpanEnd = bishan.sentence.indexOf(bishan.span)+bishan.span.length();
+				
+				// add etarget candidates
+				for (Annotation head:heads){
+					
+					if (j.judge(head,bishan))
+					String headSpan = content.getContent(head.getStartNode().getOffset(), head.getEndNode().getOffset()).toString();
+					
+					if (bishan.targets.isEmpty() && head.getStartNode().getOffset() > bishanSpanEnd){
+						bishan.targets.add(headSpan);
+					}
+					else if (!bishan.targets.isEmpty()){
+						for (String target:bishan.targets){
+							int bishanTargetStart = bishan.sentence.indexOf(target);
+							int bishanTargetEnd = bishanTargetStart + target.length();
 							
-						}
-						if (bishan.targets.isEmpty()){
-							for (Annotation head:heads){
-								if (head.getStartNode().getOffset() > subj.getEndNode().getOffset()){
-									String headSpan = content.getContent(head.getStartNode().getOffset(), head.getEndNode().getOffset()).toString();
-									bishan.targets.add(headSpan);
-								}
+							if ( !(head.getStartNode().getOffset() > bishanTargetEnd) || !(head.getEndNode().getOffset() < bishanTargetStart) ){
+								bishan.targets.add(headSpan);
 							}
 						}
 					}
+						
+					
 				}
 			}
 			

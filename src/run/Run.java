@@ -23,6 +23,9 @@ public class Run {
 		
 		for (String sentence:t.sentenceHash.keySet()){
 			ArrayList<DirectNode> nodes = t.sentenceHash.get(sentence);
+			System.out.println("======");
+			System.out.println(sentence);
+			System.out.println("======");
 			for (DirectNode node:nodes){
 				System.out.println("---");
 				System.out.println(node.agent);

@@ -49,7 +49,7 @@ public class ReadBishanHolder {
 				if (opinions.size()!= 0){
 					for (int opinionIndex=0;opinionIndex<opinions.size();opinionIndex++){
 						DirectNode anno = new DirectNode();
-						anno.sentence = sentence.replaceAll("[^a-zA-Z0-9 ]+", "").replaceAll(" +", " ").trim();
+						anno.sentence = sentence;
 						anno.span = opinions.get(opinionIndex);
 						
 						// find the number of corresponding agent and target
@@ -103,9 +103,12 @@ public class ReadBishanHolder {
 			}  // if line is empty
 			else{
 				String span = line.split("\t")[0];
-				span = span.replace("-LRB-","").replace("-RRB-", "");
-				span = span.replace("-LSB-","").replace("-RSB-", "");
-				sentence += span+" ";
+				//span = span.replace("-LRB-","").replace("-RRB-", "");
+				//span = span.replace("-LSB-","").replace("-RSB-", "");
+				if (sentence.isEmpty())
+					sentence = span;
+				else
+					sentence = " "+ span;
 				
 				// this is an opinion word, and it is new
 				if ( !line.split("\t")[2].equals("O") && line.split("\t")[2].startsWith("B") ){
