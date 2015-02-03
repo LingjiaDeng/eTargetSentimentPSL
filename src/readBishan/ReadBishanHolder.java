@@ -36,10 +36,14 @@ public class ReadBishanHolder {
 		String sentence = "";
 		ArrayList<String> opinions = new ArrayList<String>();
 		ArrayList<String> opinionTags = new ArrayList<String>();
+		ArrayList<Integer> opinionStarts = new ArrayList<Integer>();
 		ArrayList<String> agents = new ArrayList<String>();
 		ArrayList<String> agentTags = new ArrayList<String>();
+		ArrayList<Integer> agentStarts = new ArrayList<Integer>();
 		ArrayList<String> targets = new ArrayList<String>();
 		ArrayList<String> targetTags = new ArrayList<String>();
+		ArrayList<Integer> targetStarts = new ArrayList<Integer>();
+		int count = -1;
 		
 		FileReader fr = new FileReader(f);
 		BufferedReader br = new BufferedReader(fr);
@@ -49,8 +53,9 @@ public class ReadBishanHolder {
 				if (opinions.size()!= 0){
 					for (int opinionIndex=0;opinionIndex<opinions.size();opinionIndex++){
 						DirectNode anno = new DirectNode();
-						anno.sentence = sentence;
-						anno.span = opinions.get(opinionIndex);
+						anno.sentence = sentence.trim();
+						anno.opinionSpan = opinions.get(opinionIndex).trim();
+						anno.opinionStart = opinionStarts.get(opinionIndex);
 						
 						// find the number of corresponding agent and target
 						String opinionTag = opinionTags.get(opinionIndex);
@@ -69,21 +74,27 @@ public class ReadBishanHolder {
 						if (agentNumbers.size()!= 0){
 							for (int agentIndex = 0;agentIndex<agents.size();agentIndex++){
 								if (agentNumbers.contains(agentTags.get(agentIndex).split("_")[2])){
-									if (anno.agent.isEmpty())
-										anno.agent = agents.get(agentIndex);
+									if (anno.agent.isEmpty()){
+										anno.agent = agents.get(agentIndex).trim();
+										anno.agentStart = agentStarts.get(agentIndex);
+									}
 									else
 										anno.agent += " "+agents.get(agentIndex);
+										anno.agent = anno.agent.trim();
+										anno.agentStart = agentStarts.get(agentIndex);
 								}
 							}
 						}
-						else
-							anno.agent = "N/A";
+						//else
+						//	anno.agent = "N/A";
 						
 						// add target
 						if (targetNumbers.size()!=0){
 							for (int targetIndex=0;targetIndex<targets.size();targetIndex++){
-								if (targetNumbers.contains(targetTags.get(targetIndex).split("_")[2]))
-									anno.targets.add(targets.get(targetIndex));
+								if (targetNumbers.contains(targetTags.get(targetIndex).split("_")[2])){
+									anno.targets.add(targets.get(targetIndex).trim());
+									anno.targetStarts.add(count);
+								}
 							}
 						}
 						
@@ -95,34 +106,39 @@ public class ReadBishanHolder {
 				sentence = "";
 				opinions = new ArrayList<String>();
 				opinionTags = new ArrayList<String>();
+				opinionStarts = new ArrayList<Integer>();
 				agents = new ArrayList<String>();
 				agentTags = new ArrayList<String>();
+				agentStarts  = new ArrayList<Integer>();;
 				targets = new ArrayList<String>();
 				targetTags = new ArrayList<String>();
+				targetStarts  = new ArrayList<Integer>();
+				count = -1;
 				
 			}  // if line is empty
 			else{
+				count++;
 				String span = line.split("\t")[0];
 				//span = span.replace("-LRB-","").replace("-RRB-", "");
 				//span = span.replace("-LSB-","").replace("-RSB-", "");
-				if (sentence.isEmpty())
-					sentence = span;
-				else
-					sentence = " "+ span;
+				sentence += span + " ";
 				
 				// this is an opinion word, and it is new
 				if ( !line.split("\t")[2].equals("O") && line.split("\t")[2].startsWith("B") ){
 					if (line.contains("AGENT")){
 						agents.add(span+" ");
 						agentTags.add(line.split("\t")[2]);
+						agentStarts.add(count);
 					}
 					else if (line.contains("DSE")){
 						opinions.add(span+" ");
 						opinionTags.add(line.split("\t")[2]);
+						opinionStarts.add(count);
 					}
 					else if (line.contains("TARGET")){
 						targets.add(span+" ");
 						targetTags.add(line.split("\t")[2]);
+						targetStarts.add(count);
 					}
 				}
 				// this is an opinion word, and its previous word is also an opinion word

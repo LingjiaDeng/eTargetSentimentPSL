@@ -16,5 +16,13 @@ public final class Overlap {
 		
 		return subStringOverlap(s1.replaceAll("[^a-zA-Z0-9]+", ""),s2.replaceAll("[^a-zA-Z0-9]+", ""));
 	}
+	
+	public static boolean intervalOverlap(int s1, int t1, int s2, int t2){
+		
+		if ( (s1<=s2 && s2<=t1) || (s2<=s1 && s1<=t2) )
+			return true;
+		else
+			return false;
+	}
 
 }

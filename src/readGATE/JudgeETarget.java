@@ -1,5 +1,8 @@
 package readGATE;
 
+import readBishan.DirectNode;
+import gate.Annotation;
+
 public class JudgeETarget {
 	
 	public JudgeETarget(){

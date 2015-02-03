@@ -36,8 +36,10 @@ public class ReadBishanSentiment {
 		ArrayList<DirectNode> directs = new ArrayList<DirectNode>();
 		String sentence = "";
 		ArrayList<String> opinions = new ArrayList<String>();
+		ArrayList<Integer> opinionStarts = new ArrayList<Integer>();
 		ArrayList<String> polarities = new ArrayList<String>();
 		boolean flagNewOpinion = false;
+		int count = -1;
 		
 		FileReader fr = new FileReader(f);
 		BufferedReader br = new BufferedReader(fr);
@@ -47,8 +49,9 @@ public class ReadBishanSentiment {
 				if (opinions.size()!= 0){
 					for (int opinionIndex=0;opinionIndex<opinions.size();opinionIndex++){
 						DirectNode anno = new DirectNode();
-						anno.sentence = sentence;
-						anno.span = opinions.get(opinionIndex);
+						anno.sentence = sentence.trim();
+						anno.opinionSpan = opinions.get(opinionIndex).trim();
+						anno.opinionStart = opinionStarts.get(opinionIndex);
 						anno.polarity = polarities.get(opinionIndex);
 												
 						// add the anno into directs
@@ -58,22 +61,23 @@ public class ReadBishanSentiment {
 			
 				sentence = "";
 				opinions = new ArrayList<String>();
+				opinionStarts = new ArrayList<Integer>();
 				polarities = new ArrayList<String>();
 				flagNewOpinion = true;
+				count = -1;
 			}  // if line is empty
 			else{
+				count++;
 				String span = line.split("\t")[0];
 				//span = span.replace("-LRB-","").replace("-RRB-", "");
 				//span = span.replace("-LSB-","").replace("-RSB-", "");
-				if (sentence.isEmpty())
-					sentence = span;
-				else
-					sentence = " "+ span;
+				sentence += span+" ";
 				
 				// this is an opinion word, and it is new
 				if ( !line.split("\t")[2].equals("O") && flagNewOpinion ){
 					flagNewOpinion = false;
 					opinions.add(span+" ");
+					opinionStarts.add(count);
 					polarities.add(line.split("\t")[2].split("_")[0]);
 				}
 				// this is an opinion word, and its previous word is also an opinion word
@@ -81,6 +85,7 @@ public class ReadBishanSentiment {
 					// a new opinion, which does not have O word between this and previous opinion
 					if ( !line.split("\t")[2].split("_")[0].equals(polarities.get(polarities.size()-1)) ){
 						opinions.add(span+" ");
+						opinionStarts.add(count);
 						polarities.add(line.split("\t")[2].split("_")[0]);
 						flagNewOpinion = false;
 					}
