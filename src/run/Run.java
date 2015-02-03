@@ -14,32 +14,21 @@ public class Run {
 		
 		// read bishan's result (with holders and polarities)
 		ReadBishanTogether bishan = new ReadBishanTogether(docId);
-		/*
-		for (String sentence:s=bishan.sentenceHash.keySet()){
-			System.out.println("----------");
-			System.out.println(sentence);
-			System.out.println("----------");
-			ArrayList<DirectNode> nodes = s.sentenceHash.get(sentence);
-			
-			for (DirectNode node:nodes){
-				System.out.println(node.agentStart+"\t"+node.agent);
-				System.out.println(node.opinionStart+"\t"+node.opinionSpan);
-				System.out.println(node.polarity);
-				System.out.print(node.targetStarts);
-				System.out.println(node.targets);
-			}
-		}*/
-		
-		// read gold standard annotations
+		// read gate's gold standard annotations
 		ReadETarget gate = new ReadETarget(docId);
 		
+		// create the sentence list where
+		// each sentence is a stucture
+		// records the gold-standard annotations, and the bishan's results
+		// and the tokenized result, and the parse tree
 		ArrayList<ASentence> sentences = new ArrayList<ASentence>();
 		sentences = gate.addBishanResults(bishan.sentenceHash,sentences);
-		System.out.println(sentences.size());
+		System.out.println("after merging: "+sentences.size());
 		
 		for (ASentence a:sentences){
 			System.out.println(a.sentenceString);
 		}
+		
 		
 	}
 }

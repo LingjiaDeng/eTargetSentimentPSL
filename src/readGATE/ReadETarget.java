@@ -3,6 +3,7 @@ package readGATE;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,29 +26,29 @@ import gate.util.GateException;
 
 public class ReadETarget {
 	private Document doc;
-	public HashMap<String,ArrayList<DirectNode>> bishanSentenceHash;
-	public HashMap<String,ASentence> sentenceHash;
+	public HashMap<Integer, ArrayList<DirectNode>> bishanSentenceHash;
+	public HashMap<Integer,ASentence> sentenceHash;
 	 
 	
 	public ReadETarget(String docId) throws MalformedURLException, GateException{
 		IntiateGATE.go(docId);
 		this.doc = IntiateGATE.doc;
-		this.sentenceHash = new HashMap<String,ASentence>();
-		this.bishanSentenceHash = new HashMap<String,ArrayList<DirectNode>>();
+		this.sentenceHash = new HashMap<Integer,ASentence>();
+		this.bishanSentenceHash = new HashMap<Integer,ArrayList<DirectNode>>();
 		readGATE();
 	}
 	
 	
-	public ArrayList<ASentence> addBishanResults(HashMap<String,ArrayList<DirectNode>> bishans,ArrayList<ASentence> sentences) throws GateException{
+	public ArrayList<ASentence> addBishanResults(HashMap<Integer,ArrayList<DirectNode>> bishans,ArrayList<ASentence> sentences) throws GateException{
 		this.bishanSentenceHash = bishans;
 		return mergeBishanIntoGATE(sentences);
 	}
 	
 	private ArrayList<ASentence> mergeBishanIntoGATE(ArrayList<ASentence> sentences){
-		for (String sentence:this.sentenceHash.keySet()){
-			ASentence aSentence = this.sentenceHash.get(sentence);
-			if (this.bishanSentenceHash.containsKey(sentence)){
-				aSentence.bishanDirects = this.bishanSentenceHash.get(sentence);	
+		for (Integer sentenceIndex:this.sentenceHash.keySet()){
+			ASentence aSentence = this.sentenceHash.get(sentenceIndex);
+			if (this.bishanSentenceHash.containsKey(sentenceIndex)){
+				aSentence.bishanDirects = this.bishanSentenceHash.get(sentenceIndex);	
 			}
 			sentences.add(aSentence);
 		}
@@ -58,15 +59,24 @@ public class ReadETarget {
 	
 	private void readGATE() throws GateException{
 		DocumentContent content = this.doc.getContent();
-		JudgeETarget j = new JudgeETarget();
 		
 		AnnotationSet markups = this.doc.getAnnotations("MPQA");
 		markups.addAll(this.doc.getAnnotations());
+		
+		// this list stores the sorted startnode offests, we can use this list to find the index of sentence in the document
+		ArrayList<Integer> sortedStartNode = new ArrayList<Integer>();
+		AnnotationSet insides = markups.get("inside");
+		for (Annotation inside:insides){
+			sortedStartNode.add(Integer.parseInt(inside.getStartNode().getOffset().toString()));
+		}
+		 Collections.sort(sortedStartNode);
+		
 		
 		for (Annotation markup:markups.get("inside")){
 			String sentence = content.getContent(markup.getStartNode().getOffset(), markup.getEndNode().getOffset()).toString();
 			ASentence aSentence = new ASentence();
 			aSentence.sentenceString = sentence;
+			aSentence.sentenceIndex = sortedStartNode.indexOf(Integer.parseInt(markup.getStartNode().getOffset().toString()));
 			
 			// tokenize and get the parse
 			PTBTokenizer<Word> ptb = PTBTokenizer.newPTBTokenizer(new StringReader(sentence));
@@ -75,8 +85,10 @@ public class ReadETarget {
 			aSentence.sentenceTokenizedString = sentenceTokenized;
 			aSentence.tokens = words;
 			
-			
 			// parse sentence
+			/*
+			 * 
+			 */
 			
 			// get the gold standard nodes
 			AnnotationSet nodesInSentence = markups.get(markup.getStartNode().getOffset(), markup.getEndNode().getOffset());
@@ -97,10 +109,10 @@ public class ReadETarget {
 			*/
 			
 			
-			this.sentenceHash.put(sentenceTokenized, aSentence);
+			this.sentenceHash.put(aSentence.sentenceIndex, aSentence);
 		}
 		
-		System.out.println(markups.get("inside").size());
+		System.out.println("# sentence from GATE: "+markups.get("inside").size());
 		
 		return;
 	}

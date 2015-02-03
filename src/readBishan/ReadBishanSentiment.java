@@ -13,7 +13,7 @@ import utils.Path;
 
 public class ReadBishanSentiment {
 	public String filePath;
-	public HashMap<String,ArrayList<DirectNode>> sentenceHash;
+	public HashMap<Integer,ArrayList<DirectNode>> sentenceHash;
 	
 	
 	public ReadBishanSentiment(String docId) throws IOException{
@@ -22,7 +22,7 @@ public class ReadBishanSentiment {
 		if (match.find()){
 			this.filePath = Path.getBishanRoot()+"Bishan_sentiment/allOutputs/"+docId.replace("/","\\")+".bishan";
 			
-			this.sentenceHash = new HashMap<String,ArrayList<DirectNode>>();
+			this.sentenceHash = new HashMap<Integer,ArrayList<DirectNode>>();
 			File f = new File(this.filePath);
 			run(f);
 		}
@@ -39,16 +39,20 @@ public class ReadBishanSentiment {
 		ArrayList<Integer> opinionStarts = new ArrayList<Integer>();
 		ArrayList<String> polarities = new ArrayList<String>();
 		boolean flagNewOpinion = false;
-		int count = -1;
+		int tokenIndex = -1;
+		int sentenceIndex = -1;
 		
 		FileReader fr = new FileReader(f);
 		BufferedReader br = new BufferedReader(fr);
 		String line = "";
 		while ( (line = br.readLine()) != null){
 			if (line.isEmpty()){
+				sentenceIndex++;
+				this.sentenceHash.put(sentenceIndex, new ArrayList<DirectNode>());
 				if (opinions.size()!= 0){
 					for (int opinionIndex=0;opinionIndex<opinions.size();opinionIndex++){
 						DirectNode anno = new DirectNode();
+						anno.sentenceIndex = sentenceIndex;
 						anno.sentence = sentence.trim();
 						anno.opinionSpan = opinions.get(opinionIndex).trim();
 						anno.opinionStart = opinionStarts.get(opinionIndex);
@@ -64,10 +68,10 @@ public class ReadBishanSentiment {
 				opinionStarts = new ArrayList<Integer>();
 				polarities = new ArrayList<String>();
 				flagNewOpinion = true;
-				count = -1;
+				tokenIndex = -1;
 			}  // if line is empty
 			else{
-				count++;
+				tokenIndex++;
 				String span = line.split("\t")[0];
 				//span = span.replace("-LRB-","").replace("-RRB-", "");
 				//span = span.replace("-LSB-","").replace("-RSB-", "");
@@ -77,7 +81,7 @@ public class ReadBishanSentiment {
 				if ( !line.split("\t")[2].equals("O") && flagNewOpinion ){
 					flagNewOpinion = false;
 					opinions.add(span+" ");
-					opinionStarts.add(count);
+					opinionStarts.add(tokenIndex);
 					polarities.add(line.split("\t")[2].split("_")[0]);
 				}
 				// this is an opinion word, and its previous word is also an opinion word
@@ -85,7 +89,7 @@ public class ReadBishanSentiment {
 					// a new opinion, which does not have O word between this and previous opinion
 					if ( !line.split("\t")[2].split("_")[0].equals(polarities.get(polarities.size()-1)) ){
 						opinions.add(span+" ");
-						opinionStarts.add(count);
+						opinionStarts.add(tokenIndex);
 						polarities.add(line.split("\t")[2].split("_")[0]);
 						flagNewOpinion = false;
 					}
@@ -100,16 +104,12 @@ public class ReadBishanSentiment {
 		br.close();
 		fr.close();
 		
-		HashMap<String,ArrayList<DirectNode>> sentences = new HashMap<String,ArrayList<DirectNode>>();
 		for (DirectNode d:directs){
-			if (!sentences.keySet().contains(d.sentence))
-				sentences.put(d.sentence, new ArrayList<DirectNode>());
-			ArrayList<DirectNode> tmp = sentences.get(d.sentence);
+			ArrayList<DirectNode> tmp = this.sentenceHash.get(d.sentenceIndex);
 			tmp.add(d);
-			sentences.put(d.sentence, tmp);
+			this.sentenceHash.put(d.sentenceIndex, tmp);
 		}  // for each directNode
 		
-		this.sentenceHash = sentences;
 		//System.out.println("sentiments: "+sentences.size());
 	}
 

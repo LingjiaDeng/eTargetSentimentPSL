@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import utils.Overlap;
 
 public class ReadBishanTogether {
-	public HashMap<String,ArrayList<DirectNode>> sentenceHash; 
+	public HashMap<Integer,ArrayList<DirectNode>> sentenceHash; 
 	
 	
 	public ReadBishanTogether(String docId) throws IOException{
@@ -28,16 +28,16 @@ public class ReadBishanTogether {
 		ReadBishanSentiment s = new ReadBishanSentiment(docId);
 		ReadBishanHolder h = new ReadBishanHolder(docId);
 		
-		HashMap<String,ArrayList<DirectNode>>  sentimentSens = s.sentenceHash;
-		HashMap<String,ArrayList<DirectNode>>  holderSens = h.sentenceHash;
+		HashMap<Integer,ArrayList<DirectNode>>  sentimentSens = s.sentenceHash;
+		HashMap<Integer,ArrayList<DirectNode>>  holderSens = h.sentenceHash;
 		
 		if (sentimentSens.size()==0 || holderSens.size() == 0)
 			return;
 		
-		for (String sentence:sentimentSens.keySet()){
-			ArrayList<DirectNode> sentiments  = new ArrayList<DirectNode>(sentimentSens.get(sentence));
-			if (holderSens.containsKey(sentence)){
-				ArrayList<DirectNode> holders = holderSens.get(sentence);
+		for (Integer sentenceIndex:sentimentSens.keySet()){
+			ArrayList<DirectNode> sentiments  = new ArrayList<DirectNode>(sentimentSens.get(sentenceIndex));
+			if (holderSens.containsKey(sentenceIndex)){
+				ArrayList<DirectNode> holders = holderSens.get(sentenceIndex);
 				
 				// match the agent and target
 				for (int i=0;i<sentiments.size();i++){
@@ -50,9 +50,9 @@ public class ReadBishanTogether {
 							sentiment.targets = holder.targets;
 							sentiment.targetStarts = holder.targetStarts;
 							// update in the original sentimentSens
-							ArrayList<DirectNode> tmp = sentimentSens.get(sentence);
+							ArrayList<DirectNode> tmp = sentimentSens.get(sentenceIndex);
 							tmp.set(i, sentiment);
-							sentimentSens.put(sentence, tmp);
+							sentimentSens.put(sentenceIndex, tmp);
 						}  // if overlap
 					}
 				}  // for each sentiment DirectNode
@@ -60,16 +60,16 @@ public class ReadBishanTogether {
 				// add the remaining unused holder DirectNode
 				for (DirectNode holder:holders){
 					if (!holder.overlapped){
-						ArrayList<DirectNode> tmp = sentimentSens.get(holder.sentence);
+						ArrayList<DirectNode> tmp = sentimentSens.get(holder.sentenceIndex);
 						tmp.add(holder);
-						sentimentSens.put(holder.sentence, tmp);
+						sentimentSens.put(holder.sentenceIndex, tmp);
 					}
 				}  // for each unused holder DirectNode
 			}  // if has sentence
 		}  // for each sentence
 		
 		this.sentenceHash = sentimentSens;
-		System.out.println("sentences:"+sentimentSens.size());
+		System.out.println("# sentence from Bishan"+sentimentSens.size());
 	}
 
 }

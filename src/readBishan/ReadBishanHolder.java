@@ -13,7 +13,7 @@ import utils.Path;
 
 public class ReadBishanHolder {
 	public String filePath;
-	public HashMap<String,ArrayList<DirectNode>> sentenceHash;
+	public HashMap<Integer,ArrayList<DirectNode>> sentenceHash;
 	
 	
 	public ReadBishanHolder(String docId) throws IOException{
@@ -21,7 +21,7 @@ public class ReadBishanHolder {
 		Matcher match = pattern.matcher(docId);
 		if (match.find()){
 			this.filePath = Path.getBishanRoot()+"Bishan_holder/allOutputs/"+docId.replace("/","\\")+".bishan";
-			this.sentenceHash = new HashMap<String,ArrayList<DirectNode>>();
+			this.sentenceHash = new HashMap<Integer,ArrayList<DirectNode>>();
 			File f = new File(this.filePath);
 			run(f);
 		}
@@ -43,16 +43,20 @@ public class ReadBishanHolder {
 		ArrayList<String> targets = new ArrayList<String>();
 		ArrayList<String> targetTags = new ArrayList<String>();
 		ArrayList<Integer> targetStarts = new ArrayList<Integer>();
-		int count = -1;
+		int tokenIndex = -1;
+		int sentenceIndex = -1;
 		
 		FileReader fr = new FileReader(f);
 		BufferedReader br = new BufferedReader(fr);
 		String line = "";
 		while ( (line = br.readLine()) != null){
 			if (line.isEmpty()){
+				sentenceIndex++;
+				this.sentenceHash.put(sentenceIndex, new ArrayList<DirectNode>());
 				if (opinions.size()!= 0){
 					for (int opinionIndex=0;opinionIndex<opinions.size();opinionIndex++){
 						DirectNode anno = new DirectNode();
+						anno.sentenceIndex = sentenceIndex;
 						anno.sentence = sentence.trim();
 						anno.opinionSpan = opinions.get(opinionIndex).trim();
 						anno.opinionStart = opinionStarts.get(opinionIndex);
@@ -93,7 +97,7 @@ public class ReadBishanHolder {
 							for (int targetIndex=0;targetIndex<targets.size();targetIndex++){
 								if (targetNumbers.contains(targetTags.get(targetIndex).split("_")[2])){
 									anno.targets.add(targets.get(targetIndex).trim());
-									anno.targetStarts.add(count);
+									anno.targetStarts.add(tokenIndex);
 								}
 							}
 						}
@@ -113,11 +117,11 @@ public class ReadBishanHolder {
 				targets = new ArrayList<String>();
 				targetTags = new ArrayList<String>();
 				targetStarts  = new ArrayList<Integer>();
-				count = -1;
+				tokenIndex = -1;
 				
 			}  // if line is empty
 			else{
-				count++;
+				tokenIndex++;
 				String span = line.split("\t")[0];
 				//span = span.replace("-LRB-","").replace("-RRB-", "");
 				//span = span.replace("-LSB-","").replace("-RSB-", "");
@@ -128,17 +132,17 @@ public class ReadBishanHolder {
 					if (line.contains("AGENT")){
 						agents.add(span+" ");
 						agentTags.add(line.split("\t")[2]);
-						agentStarts.add(count);
+						agentStarts.add(tokenIndex);
 					}
 					else if (line.contains("DSE")){
 						opinions.add(span+" ");
 						opinionTags.add(line.split("\t")[2]);
-						opinionStarts.add(count);
+						opinionStarts.add(tokenIndex);
 					}
 					else if (line.contains("TARGET")){
 						targets.add(span+" ");
 						targetTags.add(line.split("\t")[2]);
-						targetStarts.add(count);
+						targetStarts.add(tokenIndex);
 					}
 				}
 				// this is an opinion word, and its previous word is also an opinion word
@@ -157,16 +161,12 @@ public class ReadBishanHolder {
 		br.close();
 		fr.close();
 		
-		HashMap<String,ArrayList<DirectNode>> sentences = new HashMap<String,ArrayList<DirectNode>>();
 		for (DirectNode d:directs){
-			if (!sentences.keySet().contains(d.sentence))
-				sentences.put(d.sentence, new ArrayList<DirectNode>());
-			ArrayList<DirectNode> tmp = sentences.get(d.sentence);
+			ArrayList<DirectNode> tmp = this.sentenceHash.get(d.sentenceIndex);
 			tmp.add(d);
-			sentences.put(d.sentence, tmp);
+			this.sentenceHash.put(d.sentenceIndex, tmp);
 		}  // for each directNode
 		
-		this.sentenceHash = sentences;
 		//System.out.println("holders: "+sentences.size());
 		
 	}
