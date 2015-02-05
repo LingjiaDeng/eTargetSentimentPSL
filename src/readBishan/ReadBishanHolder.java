@@ -129,17 +129,17 @@ public class ReadBishanHolder {
 				
 				// this is an opinion word, and it is new
 				if ( !line.split("\t")[2].equals("O") && line.split("\t")[2].startsWith("B") ){
-					if (line.contains("AGENT")){
+					if (line.split("\t")[2].contains("AGENT")){
 						agents.add(span+" ");
 						agentTags.add(line.split("\t")[2]);
 						agentStarts.add(tokenIndex);
 					}
-					else if (line.contains("DSE")){
+					else if (line.split("\t")[2].contains("DSE")){
 						opinions.add(span+" ");
 						opinionTags.add(line.split("\t")[2]);
 						opinionStarts.add(tokenIndex);
 					}
-					else if (line.contains("TARGET")){
+					else if (line.split("\t")[2].contains("TARGET")){
 						targets.add(span+" ");
 						targetTags.add(line.split("\t")[2]);
 						targetStarts.add(tokenIndex);
@@ -148,11 +148,11 @@ public class ReadBishanHolder {
 				// this is an opinion word, and its previous word is also an opinion word
 				else if  ( !line.split("\t")[2].equals("O") && !line.split("\t")[2].startsWith("B") ){
 					// a new opinion, which does not have O word between this and previous opinion
-					if (line.contains("AGENT"))
+					if (line.split("\t")[2].contains("AGENT"))
 						agents.set(agents.size()-1, agents.get(agents.size()-1)+span+" ");
-					else if (line.contains("DSE"))
+					else if (line.split("\t")[2].contains("DSE"))
 						opinions.set(opinions.size()-1, opinions.get(opinions.size()-1)+span+" ");
-					else if (line.contains("TARGET"))
+					else if (line.split("\t")[2].contains("TARGET"))
 						targets.set(targets.size()-1, targets.get(targets.size()-1)+span+" ");
 				}
 			}  // else line is not empty

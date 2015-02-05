@@ -7,10 +7,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.process.PTBTokenizer;
 import edu.stanford.nlp.trees.Constituent;
 import edu.stanford.nlp.trees.Tree;
@@ -86,7 +88,7 @@ public class ReadETarget {
 			aSentence.sentenceString = sentence;
 			aSentence.sentenceIndex = sortedStartNode.indexOf(Integer.parseInt(markup.getStartNode().getOffset().toString()));
 			
-			if (aSentence.sentenceIndex != 2)
+			if (aSentence.sentenceIndex != 16)
 				continue;
 			
 			

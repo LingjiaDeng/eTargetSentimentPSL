@@ -7,6 +7,7 @@ import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.trees.Constituent;
 import edu.stanford.nlp.trees.ConstituentFactory;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.util.StringUtils;
 
 import gate.Annotation;
 import gate.AnnotationSet;
@@ -17,94 +18,107 @@ import utils.Overlap;
 public class FindETarget {
 	
 	public ASentence s;
+	private ArrayList<Tree> treesOfCon;
 	
 	public FindETarget(ASentence s){
 		this.s = s;
+		this.treesOfCon = new ArrayList<Tree>();
 		run();
 	}
 	
 	private void run(){
 		ASentence s = this.s;
-		System.out.println(s.sentenceTokenizedString);
+		//System.out.println(s.sentenceTokenizedString);
 		
 		AnnotationSet markups = s.annotations;
 		ArrayList<DirectNode> bishans = s.bishanDirects;
 		Tree root = s.parseTree;
 		List<Word> words = s.tokens;
-		String sentenceString = s.sentenceString;
-		Annotation inside = markups.get("inside").get(0);
 		
-		for (DirectNode d:bishans){
-			String opinionSpan = d.opinionSpan;
-			ArrayList<String> targets = d.targets;
-			System.out.println(opinionSpan);
-			System.out.println(targets);
-			
-			if (targets.size() == 0)
-				continue;
-			
-			for (String target:targets){
-				int targetStart = d.targetStarts.get(targets.indexOf(target));
-				int targetEnd = targetStart + target.split(" ").length-1;
-				List<Tree> leaves = root.getLeaves();
-				System.out.print(targetStart);
-				System.out.println(targetEnd);
-				
-				/*
-				for (Tree leave:leaves){
-					System.out.print(leave.nodeNumber(root));
-					System.out.println(" "+leave.nodeString());
-					System.out.println(leave.pathNodeToNode(leave, root));
-				}
-				*/
-				ArrayList<Constituent> tmp = new ArrayList<Constituent>();
-				for (Constituent con:root.constituents()){
-					if ( Overlap.intervalContains(con.start(), con.end(), targetStart, targetEnd) ){
-						if (tmp.size()==0)
-							tmp.add(con);
-						else{
-							if (tmp.get(0).contains(con) )
-								tmp.add(0, con);
-						}
-					}
-				}  // each constituent
-				System.out.println(tmp.get(0).start()+":"+tmp.get(0).end());
-				
-				ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
-				findTreeOfCon(tmp.get(0) , root, treesOfCon);
-				System.out.println(treesOfCon.get(0).toString());
-				
-				
-				
-				
-			}
-			
-			
+		for (DirectNode directNode:bishans){
+			// first we find all etargets in the target span
+			System.out.println(directNode.opinionSpan);
+			System.out.println(directNode.targets);
+			findAllHeadsInTargetSpan(directNode, words, root);
+			System.out.println(directNode.eTargets);
+			// next we fine/filter more eTargets in the sentence
+			// next we print in PSL format
 			
 		}  // each direct node
-		
 	}
 	
-	private void findTreeOfCon(Constituent con, Tree root, ArrayList<Tree> treesOfCon){
-		System.out.println(root.children().length);
-		System.out.println(root.constituents());
-		if (!root.constituents().contains(con))
+	private void findAllHeadsInTargetSpan(DirectNode directNode, List<Word> words, Tree root){
+		if (directNode.targets.isEmpty())
 			return;
 		
-		boolean childHasCon = false;
-		for (Tree child:root.children()){
-			System.out.println("...");
-			System.out.println(child.constituents());
-			if (child.constituents().contains(con)){
-				childHasCon = true;
-				findTreeOfCon(con, child, treesOfCon);
-			}	
-		}
+		for (String target:directNode.targets){
+			int targetStart = directNode.targetStarts.get(directNode.targets.indexOf(target));
+			int targetEnd = targetStart + target.split(" ").length-1;
+			
+			ArrayList<Constituent> tmp = new ArrayList<Constituent>();
+			for (Constituent con:root.constituents()){
+				if ( Overlap.intervalContains(con.start(), con.end(), targetStart, targetEnd) ){
+					if (tmp.size()==0)
+						tmp.add(con);
+					else{
+						if (tmp.get(0).contains(con) )
+							tmp.add(0, con);
+					}
+				}
+			}  // each constituent
 		
-		if (!childHasCon)
-			treesOfCon.add(root);
+			
+			ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
+			findTreeOfCon(tmp.get(0).toSentenceString((ArrayList) s.tokens) , root, treesOfCon);
+			
+			ArrayList<Tree> heads = new ArrayList<Tree>(); 
+			findHead(treesOfCon.get(0), heads);
+			directNode.eTargets = heads;
+			
+		} // each target
 		
 		return;
+	}
+	
+	private void findHead(Tree root, ArrayList<Tree> heads){
+		// if the current node is the parent node of a particular token, and it is either noun (NN) or verb (VB), or prounoun (PRP)
+		// print it
+		if (root.isPreTerminal() && (root.label().value().startsWith("NN") || root.label().value().startsWith("VB") || root.label().value().equals("PRP") ) ){
+			heads.add(root.children()[0]);
+		}
 		
+		
+		for (Tree child: root.children()){
+			findHead(child, heads);
+		}
+		
+		return;
+	}
+	
+	private void printTree(Tree root, Constituent con){
+		if (root.isLeaf())
+			return;
+		else{
+			System.out.println(root);
+			System.out.println(root.constituents());
+			System.out.println(root.constituents().contains(con));
+		}
+		
+		for (Tree child:root.children()){
+			printTree(child, con);
+		}
+	}
+	
+	private void findTreeOfCon(String constituentSpan, Tree root, ArrayList<Tree> treesOfCon){
+		if ( StringUtils.join(root.getLeaves()).equals(constituentSpan) ){
+			treesOfCon.add(root);
+			return;
+		}
+		
+		for (Tree child:root.children()){
+			findTreeOfCon(constituentSpan, child, treesOfCon);
+		}
+		
+		return;
 	}
 }

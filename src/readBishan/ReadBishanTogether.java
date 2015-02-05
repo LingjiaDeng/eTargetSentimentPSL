@@ -69,7 +69,7 @@ public class ReadBishanTogether {
 		}  // for each sentence
 		
 		this.sentenceHash = sentimentSens;
-		System.out.println("# sentence from Bishan"+sentimentSens.size());
+		System.out.println("# sentence from Bishan: "+sentimentSens.size());
 	}
 
 }

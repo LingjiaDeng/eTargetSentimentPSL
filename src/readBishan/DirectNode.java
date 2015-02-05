@@ -2,6 +2,8 @@ package readBishan;
 
 import java.util.ArrayList;
 
+import edu.stanford.nlp.trees.Tree;
+
 public class DirectNode {
   public String agent;
   public int agentStart;
@@ -13,7 +15,8 @@ public class DirectNode {
   public ArrayList<Integer> targetStarts;
   public String polarity;
   public boolean overlapped;
-  public ArrayList<String> eTargets;
+  public ArrayList<Tree> eTargets;
+  public ArrayList<Tree> eTargetsGS;
   
   
   public DirectNode(){
@@ -27,7 +30,8 @@ public class DirectNode {
     this.targetStarts = new ArrayList<Integer>();
     this.overlapped = false;
     this.polarity = "";
-    this.eTargets = new ArrayList<String>();
+    this.eTargets = new ArrayList<Tree>();
+    this.eTargetsGS = new ArrayList<Tree>();
   }
 
 }
