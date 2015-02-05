@@ -1,5 +1,6 @@
 package run;
 
+import featureExtraction.FindETarget;
 import gate.util.GateException;
 
 import java.io.IOException;
@@ -25,9 +26,8 @@ public class Run {
 		sentences = gate.addBishanResults(bishan.sentenceHash,sentences);
 		System.out.println("after merging: "+sentences.size());
 		
-		for (ASentence a:sentences){
-			System.out.println(a.sentenceString);
-		}
+		FindETarget find = new FindETarget(sentences.get(0));
+		
 		
 		
 	}

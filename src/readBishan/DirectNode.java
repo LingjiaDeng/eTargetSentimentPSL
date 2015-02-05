@@ -13,6 +13,7 @@ public class DirectNode {
   public ArrayList<Integer> targetStarts;
   public String polarity;
   public boolean overlapped;
+  public ArrayList<String> eTargets;
   
   
   public DirectNode(){
@@ -26,6 +27,7 @@ public class DirectNode {
     this.targetStarts = new ArrayList<Integer>();
     this.overlapped = false;
     this.polarity = "";
+    this.eTargets = new ArrayList<String>();
   }
 
 }

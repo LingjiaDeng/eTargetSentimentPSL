@@ -97,7 +97,7 @@ public class ReadBishanHolder {
 							for (int targetIndex=0;targetIndex<targets.size();targetIndex++){
 								if (targetNumbers.contains(targetTags.get(targetIndex).split("_")[2])){
 									anno.targets.add(targets.get(targetIndex).trim());
-									anno.targetStarts.add(tokenIndex);
+									anno.targetStarts.add(targetStarts.get(targetIndex));
 								}
 							}
 						}

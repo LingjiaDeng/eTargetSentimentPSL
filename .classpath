@@ -48,5 +48,6 @@
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/ant.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/bin/gate.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2013-06-20/stanford-corenlp-3.2.0.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2013-06-20/stanford-corenlp-3.2.0-javadoc.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

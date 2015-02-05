@@ -24,5 +24,13 @@ public final class Overlap {
 		else
 			return false;
 	}
+	
+	public static boolean intervalContains(int s1, int t1, int s2, int t2){
+		
+		if ( (s1<=s2) && (t2<=t1) )
+			return true;
+		else
+			return false;
+	}
 
 }

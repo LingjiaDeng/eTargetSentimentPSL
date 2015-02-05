@@ -10,7 +10,10 @@ import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.ling.Word;
+import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.process.PTBTokenizer;
+import edu.stanford.nlp.trees.Constituent;
+import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.StringUtils;
 
 import readBishan.DirectNode;
@@ -28,6 +31,7 @@ public class ReadETarget {
 	private Document doc;
 	public HashMap<Integer, ArrayList<DirectNode>> bishanSentenceHash;
 	public HashMap<Integer,ASentence> sentenceHash;
+	public static LexicalizedParser lp;
 	 
 	
 	public ReadETarget(String docId) throws MalformedURLException, GateException{
@@ -35,6 +39,9 @@ public class ReadETarget {
 		this.doc = IntiateGATE.doc;
 		this.sentenceHash = new HashMap<Integer,ASentence>();
 		this.bishanSentenceHash = new HashMap<Integer,ArrayList<DirectNode>>();
+		this.lp =  LexicalizedParser.loadModel(
+				"/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2013-06-20/englishPCFG.ser.gz","-maxLength", "80");
+		
 		readGATE();
 	}
 	
@@ -74,21 +81,32 @@ public class ReadETarget {
 		
 		for (Annotation markup:markups.get("inside")){
 			String sentence = content.getContent(markup.getStartNode().getOffset(), markup.getEndNode().getOffset()).toString();
+			
 			ASentence aSentence = new ASentence();
 			aSentence.sentenceString = sentence;
 			aSentence.sentenceIndex = sortedStartNode.indexOf(Integer.parseInt(markup.getStartNode().getOffset().toString()));
 			
+			if (aSentence.sentenceIndex != 2)
+				continue;
+			
+			
 			// tokenize and get the parse
 			PTBTokenizer<Word> ptb = PTBTokenizer.newPTBTokenizer(new StringReader(sentence));
 			List<Word> words = ptb.tokenize();
+			
 			String sentenceTokenized = StringUtils.join(words).trim();
 			aSentence.sentenceTokenizedString = sentenceTokenized;
 			aSentence.tokens = words;
 			
 			// parse sentence
+			Tree parseTree = this.lp.apply(words);
+			aSentence.parseTree = parseTree;
 			/*
-			 * 
-			 */
+			System.out.println(sentence);
+			System.out.println(parseTree.constituents());
+			Constituent c = (Constituent) parseTree.constituents().toArray()[0];
+			System.out.println("...."+c.start()+":"+c.end());
+			*/
 			
 			// get the gold standard nodes
 			AnnotationSet nodesInSentence = markups.get(markup.getStartNode().getOffset(), markup.getEndNode().getOffset());
