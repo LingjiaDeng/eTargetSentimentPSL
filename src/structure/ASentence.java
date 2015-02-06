@@ -55,13 +55,13 @@ public class ASentence {
 		int indexOfLeaf = this.tokens.indexOf(eTarget);
 		
 		for (TypedDependency td:this.tdl){
-			if ( td.gov().index()-1==indexOfLeaf && td.reln().equals("nsubj") )
+			if ( td.gov().index()-1==indexOfLeaf && td.reln().toString().equals("nsubj") )
 				newETargetIndice.add(td.dep().index()-1);
-			else if ( td.dep().index()-1==indexOfLeaf && td.reln().equals("nsubj") )
+			else if ( td.dep().index()-1==indexOfLeaf && td.reln().toString().equals("nsubj") )
 				newETargetIndice.add(td.gov().index()-1);
-			else if ( td.dep().index()-1==indexOfLeaf && td.reln().equals("dobj"))
+			else if ( td.dep().index()-1==indexOfLeaf && td.reln().toString().equals("dobj"))
 				newETargetIndice.add(td.gov().index()-1);
-			else if ( td.gov().index()-1==indexOfLeaf && td.reln().equals("dobj"))
+			else if ( td.gov().index()-1==indexOfLeaf && td.reln().toString().equals("dobj"))
 				newETargetIndice.add(td.gov().index()-1);
 		}
 		

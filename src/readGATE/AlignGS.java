@@ -40,7 +40,8 @@ public class AlignGS {
 				}
 			}
 			System.out.println(eTargetAnnos.size());
-			findMatchingETargetHeads(eTargetAnnos, aSentence.parseTree);
+			
+			bishan.eTargetsGS.addAll(findMatchingETargetHeads(eTargetAnnos, aSentence.parseTree));
 		}
 		
 		

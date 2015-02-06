@@ -8,7 +8,6 @@ import edu.stanford.nlp.trees.Constituent;
 import edu.stanford.nlp.trees.ConstituentFactory;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.StringUtils;
-
 import gate.Annotation;
 import gate.AnnotationSet;
 import structure.ASentence;
