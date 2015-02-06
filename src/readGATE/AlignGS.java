@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import readBishan.DirectNode;
-import run.ASentence;
+import utils.ASentence;
+import utils.DirectNode;
 import utils.Overlap;
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.trees.Tree;
@@ -30,24 +30,32 @@ public class AlignGS {
 			System.out.println(bishan.opinionSpan);
 			ArrayList<Annotation> subjAnnos = findMatchingSubjMarkup(bishan, markups);
 			System.out.println("# subjAnnos: "+subjAnnos.size());
+			ArrayList<Annotation> eTargetAnnos = new ArrayList<Annotation>();
 			for (Annotation subjAnno:subjAnnos){
 				System.out.print(subjAnno.toString());
-				ArrayList<Annotation> eTargetAnnos = findMatchingETargetMarkup(bishan, subjAnno, markups);
-				
-				
+				ArrayList<Annotation> tmp = findMatchingETargetMarkup(bishan, subjAnno, markups);
+				for (Annotation anno:tmp){
+					if (!eTargetAnnos.contains(anno))
+						eTargetAnnos.add(anno);
+				}
 			}
+			System.out.println(eTargetAnnos.size());
+			findMatchingETargetHeads(eTargetAnnos, aSentence.parseTree);
 		}
 		
 		
 		
 	}
 	
-	private ArrayList<Tree> findMatchingETargetHeads(ArrayList<Annotation> eTargetAnnos, Tree root, List<Word> words){
+	private ArrayList<Tree> findMatchingETargetHeads(ArrayList<Annotation> eTargetAnnos, Tree root){
 		ArrayList<Tree> heads = new ArrayList<Tree>();
 		
 		for (Tree leaf:root.getLeaves()){
-			
+			if (eTargetAnnos.contains(leaf.toString())){
+				heads.add(leaf);
+			}
 		}
+		
 		
 		return heads;
 	}
@@ -94,7 +102,6 @@ public class AlignGS {
 		}
 		
 		
-		System.out.println("eTargets: "+eTargets.size());
 		return eTargets;
 	}
 	

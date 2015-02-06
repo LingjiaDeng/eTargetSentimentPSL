@@ -1,9 +1,8 @@
-package run;
+package utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import readBishan.DirectNode;
 
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.trees.Tree;
@@ -25,6 +24,8 @@ public class ASentence {
 		this.tokens = new ArrayList<Word>();
 		this.bishanDirects = new ArrayList<DirectNode>();
 	}
+	
+	
 	
 	
 

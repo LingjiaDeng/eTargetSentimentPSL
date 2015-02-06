@@ -18,8 +18,8 @@ import edu.stanford.nlp.trees.Constituent;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.StringUtils;
 
-import readBishan.DirectNode;
-import run.ASentence;
+import utils.ASentence;
+import utils.DirectNode;
 import utils.Overlap;
 
 import gate.Annotation;
