@@ -2,18 +2,23 @@ package structure;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import readGATE.Annotation;
-import readGATE.FeatureMap;
+import gate.Annotation;
+import gate.AnnotationSet;
+import gate.FeatureMap;
+
 import utils.Overlap;
+
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
-import featureExtraction.Constituent;
-import gate.AnnotationSet;
+import edu.stanford.nlp.trees.Constituent;
+import edu.stanford.nlp.trees.ConstituentFactory;
+import edu.stanford.nlp.util.StringUtils;
 
 public class ASentence {
 	public String sentenceString;
@@ -23,6 +28,7 @@ public class ASentence {
 	public Tree parseTree;
 	public AnnotationSet annotations;
 	public ArrayList<DirectNode> bishanDirects;
+	public Collection<TypedDependency> tdl;
 	
 	public ASentence(){
 		this.sentenceString = "";
@@ -48,7 +54,7 @@ public class ASentence {
 		
 		int indexOfLeaf = this.tokens.indexOf(eTarget);
 		
-		for (TypedDependency td:tdl){
+		for (TypedDependency td:this.tdl){
 			if ( td.gov().index()-1==indexOfLeaf && td.reln().equals("nsubj") )
 				newETargetIndice.add(td.dep().index()-1);
 			else if ( td.dep().index()-1==indexOfLeaf && td.reln().equals("nsubj") )
@@ -59,7 +65,7 @@ public class ASentence {
 				newETargetIndice.add(td.gov().index()-1);
 		}
 		
-		ArrayList<Tree> leaves = this.parseTree.getLeaves();
+		ArrayList<Tree> leaves = (ArrayList<Tree>) this.parseTree.getLeaves();
 		for (Integer index:newETargetIndice){
 			newETargets.add(leaves.get(index));
 		}
@@ -78,14 +84,14 @@ public class ASentence {
 			ArrayList<Annotation> eTargetAnnos = new ArrayList<Annotation>();
 			for (Annotation subjAnno:subjAnnos){
 				System.out.print(subjAnno.toString());
-				ArrayList<Annotation> tmp = findMatchingETargetMarkup(bishan, subjAnno, markups);
+				ArrayList<Annotation> tmp = findMatchingETargetMarkup(bishan, subjAnno, this.annotations);
 				for (Annotation anno:tmp){
 					if (!eTargetAnnos.contains(anno))
 						eTargetAnnos.add(anno);
 				}
 			}
 			System.out.println(eTargetAnnos.size());
-			bishan.eTargetsGS.addAll(findMatchingETargetHeads(eTargetAnnos, aSentence.parseTree));
+			bishan.eTargetsGS.addAll(findMatchingETargetHeads(eTargetAnnos, this.parseTree));
 			
 		}
 		
@@ -154,7 +160,7 @@ public class ASentence {
 		ArrayList<Annotation> subjs  = new ArrayList<Annotation>();
 		
 		String opinionSpan = direct.opinionSpan;
-		int opinionStart = this.aSentence.sentenceTokenizedString.indexOf(opinionSpan);
+		int opinionStart = this.sentenceTokenizedString.indexOf(opinionSpan);
 		int opinionEnd = opinionStart + opinionSpan.length();
 		
 		Set<String> subjNames = new HashSet<String>();
@@ -223,7 +229,7 @@ public class ASentence {
 		
 			
 			ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
-			findTreeOfCon(tmp.get(0).toSentenceString((ArrayList) s.tokens) , root, treesOfCon);
+			findTreeOfCon(tmp.get(0).toSentenceString((ArrayList) this.tokens) , root, treesOfCon);
 			
 			ArrayList<Tree> heads = new ArrayList<Tree>(); 
 			findHead(treesOfCon.get(0), heads);
