@@ -49,9 +49,6 @@ public class ReadETarget {
 		this.tlp = new PennTreebankLanguagePack();
 		this.gsf = tlp.grammaticalStructureFactory();
 		
-		this.tlp = new PennTreebankLanguagePack();
-		this.gsf = this.tlp.grammaticalStructureFactory();
-		
 		readGATE();
 	}
 	
