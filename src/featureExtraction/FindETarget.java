@@ -11,8 +11,8 @@ import edu.stanford.nlp.util.StringUtils;
 
 import gate.Annotation;
 import gate.AnnotationSet;
-import utils.ASentence;
-import utils.DirectNode;
+import structure.ASentence;
+import structure.DirectNode;
 import utils.Overlap;
 
 public class FindETarget {
