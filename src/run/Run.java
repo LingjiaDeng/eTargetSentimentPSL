@@ -2,7 +2,6 @@ package run;
 
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import featureExtraction.FindETarget;
 import gate.util.GateException;
 
 import java.io.IOException;
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import readBishan.*;
-import readGATE.AlignGS;
 import readGATE.ReadETarget;
 import structure.ASentence;
 
@@ -37,10 +35,6 @@ public class Run {
 		aSentence.findETarget();
 		aSentence.alignGoldStandard();
 		aSentence.expandETargetUsingGFBF();
-		
-		//FindETarget find = new FindETarget(sentences.get(0));
-		//System.out.println("==============");
-		//AlignGS align = new AlignGS(sentences.get(0));
 		
 		
 	}
