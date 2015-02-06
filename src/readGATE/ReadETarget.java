@@ -49,6 +49,9 @@ public class ReadETarget {
 		this.tlp = new PennTreebankLanguagePack();
 		this.gsf = tlp.grammaticalStructureFactory();
 		
+		this.tlp = new PennTreebankLanguagePack();
+		this.gsf = this.tlp.grammaticalStructureFactory();
+		
 		readGATE();
 	}
 	
@@ -108,12 +111,9 @@ public class ReadETarget {
 			// parse sentence
 			Tree parseTree = this.lp.apply(words);
 			aSentence.parseTree = parseTree;
-			/*
-			System.out.println(sentence);
-			System.out.println(parseTree.constituents());
-			Constituent c = (Constituent) parseTree.constituents().toArray()[0];
-			System.out.println("...."+c.start()+":"+c.end());
-			*/
+			
+			GrammaticalStructure gs = this.gsf.newGrammaticalStructure(parseTree);
+			aSentence.tdl = gs.typedDependencies();
 			
 			// get the gold standard nodes
 			AnnotationSet nodesInSentence = markups.get(markup.getStartNode().getOffset(), markup.getEndNode().getOffset());
