@@ -33,11 +33,14 @@ public class Run {
 		
 		System.out.println("sentence:");
 		System.out.println(sentences.get(0).sentenceString);
-		FindETarget find = new FindETarget(sentences.get(0));
+		ASentence aSentence = sentences.get(0);
+		aSentence.findETarget();
+		aSentence.alignGoldStandard();
+		aSentence.expandETargetUsingGFBF();
 		
-		
-		System.out.println("==============");
-		AlignGS align = new AlignGS(sentences.get(0));
+		//FindETarget find = new FindETarget(sentences.get(0));
+		//System.out.println("==============");
+		//AlignGS align = new AlignGS(sentences.get(0));
 		
 		
 	}
