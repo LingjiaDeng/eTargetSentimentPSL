@@ -12,7 +12,7 @@ import java.util.Properties;
 import readBishan.*;
 import readGATE.AlignGS;
 import readGATE.ReadETarget;
-import utils.ASentence;
+import structure.ASentence;
 
 public class Run {
 	public static void main(String[] args) throws IOException, GateException{

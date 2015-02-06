@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import utils.ASentence;
-import utils.DirectNode;
+import structure.ASentence;
+import structure.DirectNode;
 import utils.Overlap;
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.trees.Tree;
@@ -40,7 +40,8 @@ public class AlignGS {
 				}
 			}
 			System.out.println(eTargetAnnos.size());
-			findMatchingETargetHeads(eTargetAnnos, aSentence.parseTree);
+			
+			bishan.eTargetsGS.addAll(findMatchingETargetHeads(eTargetAnnos, aSentence.parseTree));
 		}
 		
 		

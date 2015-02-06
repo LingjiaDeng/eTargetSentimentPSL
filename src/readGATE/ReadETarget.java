@@ -15,13 +15,14 @@ import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.process.PTBTokenizer;
 import edu.stanford.nlp.trees.Constituent;
+import edu.stanford.nlp.trees.GrammaticalStructureFactory;
+import edu.stanford.nlp.trees.PennTreebankLanguagePack;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TreebankLanguagePack;
 import edu.stanford.nlp.util.StringUtils;
-
-import utils.ASentence;
-import utils.DirectNode;
+import structure.ASentence;
+import structure.DirectNode;
 import utils.Overlap;
-
 import gate.Annotation;
 import gate.AnnotationSet;
 import gate.Document;
@@ -33,7 +34,9 @@ public class ReadETarget {
 	private Document doc;
 	public HashMap<Integer, ArrayList<DirectNode>> bishanSentenceHash;
 	public HashMap<Integer,ASentence> sentenceHash;
-	public static LexicalizedParser lp;
+	private static LexicalizedParser lp;
+	private static TreebankLanguagePack tlp;
+	private static GrammaticalStructureFactory gsf;
 	 
 	
 	public ReadETarget(String docId) throws MalformedURLException, GateException{
@@ -43,6 +46,8 @@ public class ReadETarget {
 		this.bishanSentenceHash = new HashMap<Integer,ArrayList<DirectNode>>();
 		this.lp =  LexicalizedParser.loadModel(
 				"/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2013-06-20/englishPCFG.ser.gz","-maxLength", "80");
+		this.tlp = new PennTreebankLanguagePack();
+		this.gsf = tlp.grammaticalStructureFactory();
 		
 		readGATE();
 	}
