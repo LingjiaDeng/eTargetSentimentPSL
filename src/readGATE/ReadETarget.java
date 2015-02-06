@@ -15,6 +15,7 @@ import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.process.PTBTokenizer;
 import edu.stanford.nlp.trees.Constituent;
+import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.GrammaticalStructureFactory;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
 import edu.stanford.nlp.trees.Tree;
