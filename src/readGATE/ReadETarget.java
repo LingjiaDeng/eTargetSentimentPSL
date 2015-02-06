@@ -103,6 +103,10 @@ public class ReadETarget {
 			// parse sentence
 			Tree parseTree = this.lp.apply(words);
 			aSentence.parseTree = parseTree;
+			
+			// get the typed dependencies
+			
+			
 			/*
 			System.out.println(sentence);
 			System.out.println(parseTree.constituents());
