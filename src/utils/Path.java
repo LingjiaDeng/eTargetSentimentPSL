@@ -3,6 +3,7 @@ package utils;
 public final class Path {
 	private static String bishanRoot = "/afs/cs.pitt.edu/usr0/lid29/Documents/Bishan/";
 	private static String gate_annoRoot = "/afs/cs.pitt.edu/projects/wiebe/opin/database/gate_anns/";
+	private static String gfbfLexiconFile = "/afs/cs.pitt.edu/usr0/lid29/Downloads/effectwordnet/EffectWordNet.tff";
 	
 	private Path(){
 	}
@@ -13,5 +14,9 @@ public final class Path {
 	
 	public static String getGate_annoRoot(){
 		return gate_annoRoot;
+	}
+	
+	public static String getGFBFLexiconFile(){
+		return gfbfLexiconFile;
 	}
 }

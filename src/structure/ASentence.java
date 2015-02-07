@@ -1,5 +1,6 @@
 package structure;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,6 +14,7 @@ import gate.Annotation;
 import gate.AnnotationSet;
 import gate.FeatureMap;
 
+import utils.GFBF;
 import utils.Overlap;
 
 import edu.stanford.nlp.ling.CoreLabel;
@@ -45,7 +47,7 @@ public class ASentence {
 		this.bishanDirects = new ArrayList<DirectNode>();
 	}
 	
-	public void expandETargetUsingGFBF(){
+	public void expandETargetUsingGFBF() throws IOException{
 		System.out.println("----- 2nd: adding gfbf rules -----");
 		for (DirectNode bishan:this.bishanDirects){
 			System.out.println(bishan.opinionSpan);
@@ -59,7 +61,7 @@ public class ASentence {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private ArrayList<Tree> findETargetUsingDep(ArrayList<Tree> eTargets){
+	private ArrayList<Tree> findETargetUsingDep(ArrayList<Tree> eTargets) throws IOException{
 		if (eTargets.isEmpty() || eTargets.size()==0)
 			return null;
 		
@@ -95,28 +97,38 @@ public class ASentence {
 	}
 	
 	// if indexOfLeaf == dep, then judge gov
-	private boolean rulesJudgeGov(TypedDependency td, int indexOfLeaf){
-		if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
+	private boolean rulesJudgeGov(TypedDependency td, int indexOfLeaf) throws IOException{
+		if (td.gov().index() == 0)
+			return false;
+		
+		String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
+		
+		if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )   // sentiment(agent) -> sentiment(event)
 			return true;
-		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("dobj") && GFBF.isGF(govWord))  // sentiment(theme) -> sentiment(event): gov must be a goodfor 
 			return true;
-		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("conj"))
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("conj"))  //  ``and'' 
 			return true;
-		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("ccomp"))
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("ccomp")  &&  GFBF.isGF(govWord))  //  sentiment(event) -> sentiment(retainer): gov must be a retainer 
 			return true;
 		
 		return false;
 	}
 	
 	// if indexOfLeaf == gov, then judge dep
-	private boolean rulesJudgeDep(TypedDependency td, int indexOfLeaf){
-		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
+	private boolean rulesJudgeDep(TypedDependency td, int indexOfLeaf) throws IOException{
+		if (td.gov().index() == 0)
+			return false;
+		
+		String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
+		
+		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )   // sentiment(event) -> sentiment(agent)
 			return true;
-		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj")  &&  GFBF.isGF(govWord))   //  sentiment(event) -> sentiment(theme): gov must be a goodfor
 			return true;
-		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))   // ``and''
 			return true;
-		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("ccomp"))
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("ccomp")  &&  GFBF.isBF(govWord))    // sentiment(retainer) -> sentiment(event): gov must be a retainer
 			return true;
 		
 		return false;
