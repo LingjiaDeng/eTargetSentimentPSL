@@ -50,9 +50,6 @@ public class ASentence {
 			
 		}  // each direct node
 		
-		
-		
-		
 		return;
 	}
 	
@@ -66,7 +63,7 @@ public class ASentence {
 		ArrayList<Tree> newETargets = new ArrayList<Tree>();
 		ArrayList<Tree> visited = new ArrayList<Tree>();
 		
-		
+		// put all the etargets from step 1 into the queue
 		for (Tree eTarget:eTargets){
 			queue.offer(eTarget);
 		}
@@ -76,71 +73,48 @@ public class ASentence {
 			if (visited.contains(newETarget))
 				continue;
 			
-			System.out.println(visited);
 			visited.add(newETarget);
 			newETargets.add(newETarget);
 			// find the qualified neighbors
-			int indexOfLeaf = this.parseTree.getLeaves().indexOf(newETarget);
+			int indexOfLeaf = leaves.indexOf(newETarget)+1;
 			
 			for (TypedDependency td:this.tdl){
-				if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
-					queue.offer(leaves.get(td.dep().index()-1));
-				else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
+				if (rulesJudgeGov(td, indexOfLeaf))
 					queue.offer(leaves.get(td.gov().index()-1));
-				else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
-					queue.offer(leaves.get(td.gov().index()-1));
-				else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
+				if (rulesJudgeDep(td, indexOfLeaf))
 					queue.offer(leaves.get(td.dep().index()-1));
-				else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))
-					queue.offer(leaves.get(td.dep().index()-1));
-				else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("conj"))
-					queue.offer(leaves.get(td.gov().index()-1));
 			}
-		}
-		
-		
-		/*
-		ArrayList<Tree> newETargets = new ArrayList<Tree>();
-		
-		
-		int indexOfLeaf = this.parseTree.getLeaves().indexOf(eTarget);
-		
-		
-		
-		
-		ArrayList<Tree>  newETargets = new ArrayList<Tree>();
-		ArrayList<Integer> newETargetIndice = new ArrayList<Integer>();
-		
-		int indexOfLeaf = this.parseTree.getLeaves().indexOf(eTarget);
-		
-		for (TypedDependency td:this.tdl){
-			if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
-				newETargetIndice.add(td.dep().index()-1);
-			else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
-				newETargetIndice.add(td.gov().index()-1);
-			else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
-				newETargetIndice.add(td.gov().index()-1);
-			else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
-				newETargetIndice.add(td.dep().index()-1);
-			else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))
-				newETargetIndice.add(td.dep().index()-1);
-			else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("conj"))
-				newETargetIndice.add(td.gov().index()-1);
-		}
-		
-		ArrayList<Tree> leaves = (ArrayList<Tree>) this.parseTree.getLeaves();
-		for (Integer index:newETargetIndice){
-			newETargets.add(leaves.get(index));
-		}
-		*/
-		
-		/*
-		for (Tree newETarget:newETargets){
-			returned.add(newETarget);
-		}
-		*/
+		}   // while queue isn't empty
 		
 		return newETargets;
+	}
+	
+	// if indexOfLeaf == dep, then judge gov
+	private boolean rulesJudgeGov(TypedDependency td, int indexOfLeaf){
+		if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
+			return true;
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
+			return true;
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("conj"))
+			return true;
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("ccomp"))
+			return true;
+		
+		return false;
+	}
+	
+	// if indexOfLeaf == gov, then judge dep
+	private boolean rulesJudgeDep(TypedDependency td, int indexOfLeaf){
+		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
+			return true;
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
+			return true;
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))
+			return true;
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("ccomp"))
+			return true;
+		
+		return false;
 	}
 	
 	

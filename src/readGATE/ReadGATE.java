@@ -110,6 +110,7 @@ public class ReadGATE {
 			Tree parseTree = this.lp.apply(words);
 			aSentence.parseTree = parseTree;
 			
+			// dependency parser
 			GrammaticalStructure gs = this.gsf.newGrammaticalStructure(parseTree);
 			aSentence.tdl = gs.typedDependencies();
 			
