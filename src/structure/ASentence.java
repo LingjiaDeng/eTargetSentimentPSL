@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 import gate.Annotation;
@@ -39,29 +41,90 @@ public class ASentence {
 	}
 	
 	public void expandETargetUsingGFBF(){
+		System.out.println("----- 2nd: adding gfbf rules -----");
 		for (DirectNode bishan:this.bishanDirects){
-			for (Tree eTarget:bishan.eTargets){
-				findETargetUsingDep(eTarget);
-			}
-		}
+			System.out.println(bishan.opinionSpan);
+			bishan.eTargets = findETargetUsingDep(bishan.eTargets);
+			
+			System.out.println(bishan.eTargets);
+			
+		}  // each direct node
+		
+		
+		
 		
 		return;
 	}
 	
-	private void findETargetUsingDep(Tree eTarget){
+	@SuppressWarnings("unchecked")
+	private ArrayList<Tree> findETargetUsingDep(ArrayList<Tree> eTargets){
+		if (eTargets.isEmpty() || eTargets.size()==0)
+			return null;
+		
+		ArrayList<Tree> leaves = (ArrayList<Tree>) this.parseTree.getLeaves();
+		Queue<Tree> queue = new LinkedList<Tree>();
+		ArrayList<Tree> newETargets = new ArrayList<Tree>();
+		ArrayList<Tree> visited = new ArrayList<Tree>();
+		
+		
+		for (Tree eTarget:eTargets){
+			queue.offer(eTarget);
+		}
+		
+		while (!queue.isEmpty()){
+			Tree newETarget = queue.poll();
+			if (visited.contains(newETarget))
+				continue;
+			
+			System.out.println(visited);
+			visited.add(newETarget);
+			newETargets.add(newETarget);
+			// find the qualified neighbors
+			int indexOfLeaf = this.parseTree.getLeaves().indexOf(newETarget);
+			
+			for (TypedDependency td:this.tdl){
+				if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
+					queue.offer(leaves.get(td.dep().index()-1));
+				else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
+					queue.offer(leaves.get(td.gov().index()-1));
+				else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
+					queue.offer(leaves.get(td.gov().index()-1));
+				else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
+					queue.offer(leaves.get(td.dep().index()-1));
+				else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))
+					queue.offer(leaves.get(td.dep().index()-1));
+				else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("conj"))
+					queue.offer(leaves.get(td.gov().index()-1));
+			}
+		}
+		
+		
+		/*
+		ArrayList<Tree> newETargets = new ArrayList<Tree>();
+		
+		
+		int indexOfLeaf = this.parseTree.getLeaves().indexOf(eTarget);
+		
+		
+		
+		
 		ArrayList<Tree>  newETargets = new ArrayList<Tree>();
 		ArrayList<Integer> newETargetIndice = new ArrayList<Integer>();
 		
-		int indexOfLeaf = this.tokens.indexOf(eTarget);
+		int indexOfLeaf = this.parseTree.getLeaves().indexOf(eTarget);
 		
 		for (TypedDependency td:this.tdl){
-			if ( td.gov().index()-1==indexOfLeaf && td.reln().toString().equals("nsubj") )
+			if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
 				newETargetIndice.add(td.dep().index()-1);
-			else if ( td.dep().index()-1==indexOfLeaf && td.reln().toString().equals("nsubj") )
+			else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )
 				newETargetIndice.add(td.gov().index()-1);
-			else if ( td.dep().index()-1==indexOfLeaf && td.reln().toString().equals("dobj"))
+			else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
 				newETargetIndice.add(td.gov().index()-1);
-			else if ( td.gov().index()-1==indexOfLeaf && td.reln().toString().equals("dobj"))
+			else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj"))
+				newETargetIndice.add(td.dep().index()-1);
+			else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))
+				newETargetIndice.add(td.dep().index()-1);
+			else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("conj"))
 				newETargetIndice.add(td.gov().index()-1);
 		}
 		
@@ -69,21 +132,25 @@ public class ASentence {
 		for (Integer index:newETargetIndice){
 			newETargets.add(leaves.get(index));
 		}
+		*/
 		
+		/*
+		for (Tree newETarget:newETargets){
+			returned.add(newETarget);
+		}
+		*/
 		
-		return;
+		return newETargets;
 	}
 	
 	
 	public void alignGoldStandard(){
+		System.out.println("----- gold standard eTargets -----");
 		for (DirectNode bishan:this.bishanDirects){
-			System.out.println("----------");
 			System.out.println(bishan.opinionSpan);
 			ArrayList<Annotation> subjAnnos = findMatchingSubjMarkup(bishan, this.annotations);
-			System.out.println("# subjAnnos: "+subjAnnos.size());
 			ArrayList<Annotation> eTargetAnnos = new ArrayList<Annotation>();
 			for (Annotation subjAnno:subjAnnos){
-				System.out.print(subjAnno.toString());
 				ArrayList<Annotation> tmp = findMatchingETargetMarkup(bishan, subjAnno, this.annotations);
 				for (Annotation anno:tmp){
 					if (!eTargetAnnos.contains(anno))
@@ -193,6 +260,7 @@ public class ASentence {
 		Tree root = this.parseTree;
 		List<Word> words = this.tokens;
 		
+		System.out.println("----- 1st: eTargets in target span -----");
 		for (DirectNode directNode:bishans){
 			// first we find all etargets in the target span
 			System.out.println(directNode.opinionSpan);
@@ -215,6 +283,7 @@ public class ASentence {
 			int targetStart = directNode.targetStarts.get(directNode.targets.indexOf(target));
 			int targetEnd = targetStart + target.split(" ").length-1;
 			
+			// tmp.get(0) is the smallest constituent including the target span
 			ArrayList<Constituent> tmp = new ArrayList<Constituent>();
 			for (Constituent con:root.constituents()){
 				if ( Overlap.intervalContains(con.start(), con.end(), targetStart, targetEnd) ){
@@ -228,12 +297,18 @@ public class ASentence {
 			}  // each constituent
 		
 			
+			// find the subtree corresponding to the constituent
 			ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
 			findTreeOfCon(tmp.get(0).toSentenceString((ArrayList) this.tokens) , root, treesOfCon);
 			
+			// find the heads in the subtree
 			ArrayList<Tree> heads = new ArrayList<Tree>(); 
 			findHead(treesOfCon.get(0), heads);
-			directNode.eTargets = heads;
+			for (Tree head:heads){
+				if (target.contains(head.nodeString() )){
+					directNode.eTargets.add(head);
+				}
+			}
 			
 		} // each target
 		

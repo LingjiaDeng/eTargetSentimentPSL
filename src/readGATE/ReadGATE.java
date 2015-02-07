@@ -31,7 +31,7 @@ import gate.DocumentContent;
 import gate.FeatureMap;
 import gate.util.GateException;
 
-public class ReadETarget {
+public class ReadGATE {
 	private Document doc;
 	public HashMap<Integer, ArrayList<DirectNode>> bishanSentenceHash;
 	public HashMap<Integer,ASentence> sentenceHash;
@@ -40,7 +40,7 @@ public class ReadETarget {
 	private static GrammaticalStructureFactory gsf;
 	 
 	
-	public ReadETarget(String docId) throws MalformedURLException, GateException{
+	public ReadGATE(String docId) throws MalformedURLException, GateException{
 		IntiateGATE.go(docId);
 		this.doc = IntiateGATE.doc;
 		this.sentenceHash = new HashMap<Integer,ASentence>();
@@ -56,10 +56,10 @@ public class ReadETarget {
 	
 	public ArrayList<ASentence> addBishanResults(HashMap<Integer,ArrayList<DirectNode>> bishans,ArrayList<ASentence> sentences) throws GateException{
 		this.bishanSentenceHash = bishans;
-		return mergeBishanIntoGATE(sentences);
+		return addBishanResults(sentences);
 	}
 	
-	private ArrayList<ASentence> mergeBishanIntoGATE(ArrayList<ASentence> sentences){
+	private ArrayList<ASentence> addBishanResults(ArrayList<ASentence> sentences){
 		for (Integer sentenceIndex:this.sentenceHash.keySet()){
 			ASentence aSentence = this.sentenceHash.get(sentenceIndex);
 			if (this.bishanSentenceHash.containsKey(sentenceIndex)){
@@ -116,20 +116,6 @@ public class ReadETarget {
 			// get the gold standard nodes
 			AnnotationSet nodesInSentence = markups.get(markup.getStartNode().getOffset(), markup.getEndNode().getOffset());
 			aSentence.annotations = nodesInSentence;
-			/*
-			Set<String> etargetNames = new HashSet<String>();
-			etargetNames.add("eTarget");
-			etargetNames.add("eTarget-new");
-			AnnotationSet etargets = nodesInSentence.get(etargetNames);
-			AnnotationSet sentiments = nodesInSentence.get("sentiment");
-			AnnotationSet eses = nodesInSentence.get("ESE-polar");
-			Set<String> subjNames = new HashSet<String>();
-			subjNames.add("sentiment");
-			subjNames.add("ESE-polar");
-			AnnotationSet subjs = nodesInSentence.get(subjNames);
-			AnnotationSet agents = nodesInSentence.get("agent");
-			//AnnotationSet heads = nodesInSentence.get("head");
-			*/
 			
 			
 			this.sentenceHash.put(aSentence.sentenceIndex, aSentence);

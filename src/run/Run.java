@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import readBishan.*;
-import readGATE.ReadETarget;
+import readGATE.ReadGATE;
 import structure.ASentence;
 
 public class Run {
@@ -18,13 +18,11 @@ public class Run {
 		
 		// read bishan's result (with holders and polarities)
 		ReadBishanTogether bishan = new ReadBishanTogether(docId);
-		// read gate's gold standard annotations
-		ReadETarget gate = new ReadETarget(docId);
+		// read gate's all (gold standard) annotations
+		ReadGATE gate = new ReadGATE(docId);
 		
 		// create the sentence list where
-		// each sentence is a stucture
-		// records the gold-standard annotations, and the bishan's results
-		// and the tokenized result, and the parse tree
+		// each sentence is a structure
 		ArrayList<ASentence> sentences = new ArrayList<ASentence>();
 		sentences = gate.addBishanResults(bishan.sentenceHash,sentences);
 		System.out.println("after merging: "+sentences.size());
@@ -32,8 +30,8 @@ public class Run {
 		System.out.println("sentence:");
 		System.out.println(sentences.get(0).sentenceString);
 		ASentence aSentence = sentences.get(0);
-		aSentence.findETarget();
 		aSentence.alignGoldStandard();
+		aSentence.findETarget();
 		aSentence.expandETargetUsingGFBF();
 		
 		
