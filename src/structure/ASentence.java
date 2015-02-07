@@ -15,28 +15,33 @@ import gate.FeatureMap;
 
 import utils.Overlap;
 
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Word;
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.trees.Constituent;
 import edu.stanford.nlp.trees.ConstituentFactory;
+import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
+import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 
 public class ASentence {
 	public String sentenceString;
 	public String sentenceTokenizedString;
 	public int sentenceIndex;
-	public List<Word> tokens;
-	public Tree parseTree;
+	//public List<Word> tokens;
+	//public Tree parseTree;
 	public AnnotationSet annotations;
 	public ArrayList<DirectNode> bishanDirects;
 	public Collection<TypedDependency> tdl;
+	public CoreMap sentenceSyntax;
 	
 	public ASentence(){
 		this.sentenceString = "";
 		this.sentenceTokenizedString = "";
 		this.sentenceIndex = -1;
-		this.tokens = new ArrayList<Word>();
+		//this.tokens = new ArrayList<Word>();
 		this.bishanDirects = new ArrayList<DirectNode>();
 	}
 	
@@ -58,7 +63,7 @@ public class ASentence {
 		if (eTargets.isEmpty() || eTargets.size()==0)
 			return null;
 		
-		ArrayList<Tree> leaves = (ArrayList<Tree>) this.parseTree.getLeaves();
+		ArrayList<Tree> leaves = (ArrayList<Tree>) this.sentenceSyntax.get(TreeAnnotation.class).getLeaves();
 		Queue<Tree> queue = new LinkedList<Tree>();
 		ArrayList<Tree> newETargets = new ArrayList<Tree>();
 		ArrayList<Tree> visited = new ArrayList<Tree>();
@@ -132,7 +137,7 @@ public class ASentence {
 				}
 			}
 			System.out.println(eTargetAnnos.size());
-			bishan.eTargetsGS.addAll(findMatchingETargetHeads(eTargetAnnos, this.parseTree));
+			bishan.eTargetsGS.addAll(findMatchingETargetHeads(eTargetAnnos, this.sentenceSyntax.get(TreeAnnotation.class)));
 			
 		}
 		
@@ -231,15 +236,15 @@ public class ASentence {
 	public void findETarget(){
 		AnnotationSet markups = this.annotations;
 		ArrayList<DirectNode> bishans = this.bishanDirects;
-		Tree root = this.parseTree;
-		List<Word> words = this.tokens;
+		Tree root = this.sentenceSyntax.get(TreeAnnotation.class);
+		//List<CoreLabel> words = this.sentenceSyntax.get(TokensAnnotation.class);
 		
 		System.out.println("----- 1st: eTargets in target span -----");
 		for (DirectNode directNode:bishans){
 			// first we find all etargets in the target span
 			System.out.println(directNode.opinionSpan);
 			System.out.println(directNode.targets);
-			findAllHeadsInTargetSpan(directNode, words, root);
+			findAllHeadsInTargetSpan(directNode, root);
 			System.out.println(directNode.eTargets);
 			// next we fine/filter more eTargets in the sentence
 			// next we print in PSL format
@@ -249,7 +254,7 @@ public class ASentence {
 		return;
 	}
 	
-	private void findAllHeadsInTargetSpan(DirectNode directNode, List<Word> words, Tree root){
+	private void findAllHeadsInTargetSpan(DirectNode directNode, Tree root){
 		if (directNode.targets.isEmpty())
 			return;
 		
@@ -273,7 +278,7 @@ public class ASentence {
 			
 			// find the subtree corresponding to the constituent
 			ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
-			findTreeOfCon(tmp.get(0).toSentenceString((ArrayList) this.tokens) , root, treesOfCon);
+			findTreeOfCon(tmp.get(0).toSentenceString((ArrayList) this.sentenceSyntax.get(TokensAnnotation.class)) , root, treesOfCon);
 			
 			// find the heads in the subtree
 			ArrayList<Tree> heads = new ArrayList<Tree>(); 
