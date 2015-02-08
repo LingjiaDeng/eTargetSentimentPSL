@@ -82,7 +82,8 @@ public class ReadGATE {
 		for (Integer sentenceIndex:this.sentenceHash.keySet()){
 			ASentence aSentence = this.sentenceHash.get(sentenceIndex);
 			if (this.bishanSentenceHash.containsKey(sentenceIndex)){
-				aSentence.bishanDirects = this.bishanSentenceHash.get(sentenceIndex);	
+				aSentence.bishanDirects = this.bishanSentenceHash.get(sentenceIndex);
+				aSentence.sentenceTokenizedString = aSentence.bishanDirects.get(0).sentence;
 			}
 			sentences.add(aSentence);
 		}

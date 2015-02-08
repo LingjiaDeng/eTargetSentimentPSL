@@ -53,6 +53,9 @@ public class Doc {
 	public void statistics(){
 		for (ASentence aSentence:this.sentences){
 			for (DirectNode direct:aSentence.bishanDirects){
+				if (direct.eTargetsGS.isEmpty() || direct.eTargetsGS.size() == 0)
+					continue;
+				
 				this.gsNum += direct.eTargetsGS.size();
 				this.autoNum += direct.eTargets.size();
 				for (Tree eTarget:direct.eTargetsGS){
@@ -63,8 +66,8 @@ public class Doc {
 		}
 		
 		System.out.println("----- statistics -----");
-		System.out.println(this.corretNum*1.0/this.gsNum);
-		System.out.println(this.corretNum*1.0/this.autoNum);
+		System.out.println("recall: "+this.corretNum*1.0/this.gsNum);
+		System.out.println("precision: "+this.corretNum*1.0/this.autoNum);
 	}
 	
 	

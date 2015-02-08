@@ -19,6 +19,7 @@ import gate.util.InvalidOffsetException;
 
 import utils.GFBF;
 import utils.Overlap;
+import utils.Rule;
 
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -53,7 +54,7 @@ public class ASentence {
 		System.out.println("----- 2nd: adding gfbf rules -----");
 		for (DirectNode bishan:this.bishanDirects){
 			System.out.println(bishan.opinionSpan);
-			bishan.eTargets = findETargetUsingDep(bishan.eTargets);
+			bishan.eTargets = expandETargetUsingGFBF(bishan.eTargets);
 			
 			System.out.println(bishan.eTargets);
 			
@@ -63,9 +64,9 @@ public class ASentence {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private ArrayList<Tree> findETargetUsingDep(ArrayList<Tree> eTargets) throws IOException{
+	private ArrayList<Tree> expandETargetUsingGFBF(ArrayList<Tree> eTargets) throws IOException{
 		if (eTargets.isEmpty() || eTargets.size()==0)
-			return null;
+			return eTargets;
 		
 		ArrayList<Tree> leaves = (ArrayList<Tree>) this.sentenceSyntax.get(TreeAnnotation.class).getLeaves();
 		Queue<Tree> queue = new LinkedList<Tree>();
@@ -88,53 +89,18 @@ public class ASentence {
 			int indexOfLeaf = leaves.indexOf(newETarget)+1;
 			
 			for (TypedDependency td:this.tdl){
-				if (rulesJudgeGov(td, indexOfLeaf))
+				if (td.gov().index()==0)
+					continue;
+				
+				String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
+				if (Rule.gfbfRulesJudgeGov(td, indexOfLeaf, govWord))
 					queue.offer(leaves.get(td.gov().index()-1));
-				if (rulesJudgeDep(td, indexOfLeaf))
+				if (Rule.gfbfRulesJudgeDep(td, indexOfLeaf, govWord))
 					queue.offer(leaves.get(td.dep().index()-1));
 			}
 		}   // while queue isn't empty
 		
 		return newETargets;
-	}
-	
-	// if indexOfLeaf == dep, then judge gov
-	private boolean rulesJudgeGov(TypedDependency td, int indexOfLeaf) throws IOException{
-		if (td.gov().index() == 0)
-			return false;
-		
-		String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
-		
-		if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )   // sentiment(agent) -> sentiment(event)
-			return true;
-		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("dobj") && GFBF.isGF(govWord))  // sentiment(theme) -> sentiment(event): gov must be a goodfor 
-			return true;
-		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("conj"))  //  ``and'' 
-			return true;
-		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("ccomp")  &&  GFBF.isGF(govWord))  //  sentiment(event) -> sentiment(retainer): gov must be a retainer 
-			return true;
-		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().contains("mod"))   //  find object of a modifier
-			return true;
-		return false;
-	}
-	
-	// if indexOfLeaf == gov, then judge dep
-	private boolean rulesJudgeDep(TypedDependency td, int indexOfLeaf) throws IOException{
-		if (td.gov().index() == 0)
-			return false;
-		
-		String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
-		
-		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )   // sentiment(event) -> sentiment(agent)
-			return true;
-		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj")  &&  GFBF.isGF(govWord))   //  sentiment(event) -> sentiment(theme): gov must be a goodfor
-			return true;
-		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))   // ``and''
-			return true;
-		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("ccomp")  &&  GFBF.isBF(govWord))    // sentiment(retainer) -> sentiment(event): gov must be a retainer
-			return true;
-		
-		return false;
 	}
 	
 	
@@ -152,7 +118,7 @@ public class ASentence {
 				}
 			}
 			bishan.eTargetsGS.addAll(findMatchingHeads(eTargetAnnos, this.sentenceSyntax.get(TreeAnnotation.class)));
-			
+			System.out.println(bishan.eTargetsGS);
 		}
 		
 		return;
@@ -217,7 +183,7 @@ public class ASentence {
 		return eTargets;
 	}
 	
-	private ArrayList<Annotation> findMatchingSubjMarkup(DirectNode direct, AnnotationSet markups){
+	private ArrayList<Annotation> findMatchingSubjMarkup(DirectNode direct, AnnotationSet markups) throws GateException{
 		ArrayList<Annotation> subjs  = new ArrayList<Annotation>();
 		
 		String opinionSpan = direct.opinionSpan;
@@ -240,6 +206,7 @@ public class ASentence {
 			int annoStart = (int) (subjAnno.getStartNode().getOffset() - sentenceStart);
 			int annoEnd = (int) (subjAnno.getEndNode().getOffset() - sentenceStart);
 			if (Overlap.intervalOverlap(opinionStart, opinionEnd, annoStart, annoEnd)){
+				//System.out.println("!!!"+this.content.getContent(subjAnno.getStartNode().getOffset(), subjAnno.getEndNode().getOffset()).toString());
 				subjs.add(subjAnno);
 			}
 		}
@@ -367,9 +334,13 @@ public class ASentence {
 		ArrayList<Tree> leaves = (ArrayList<Tree>) this.sentenceSyntax.get(TreeAnnotation.class).getLeaves();
 		
 		for (TypedDependency td:this.tdl){
-			if (rulesJudgeGov(td, indexOfLeaf))
+			if (td.gov().index() == 0)
+				continue;
+			
+			String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
+			if (Rule.targetRulesJudgeGov(td, indexOfLeaf, govWord))
 				eTargets.add(leaves.get(td.gov().index()-1));
-			if (rulesJudgeDep(td, indexOfLeaf))
+			if (Rule.targetRulesJudgeDep(td, indexOfLeaf, govWord))
 				eTargets.add(leaves.get(td.dep().index()-1));
 		}
 		
