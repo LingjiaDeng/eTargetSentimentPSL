@@ -24,17 +24,9 @@ public class Doc {
 		this.autoNum = 0;
 		this.corretNum = 0;
 		
-		read();
-		generateETarget();
-		statistics();
-		
-		System.out.println("----- statistics -----");
-		System.out.println(this.corretNum*1.0/this.gsNum);
-		System.out.println(this.corretNum*1.0/this.autoNum);
-		
 	}
 	
-	private void read() throws IOException, GateException{
+	public void read() throws IOException, GateException{
 		// read bishan's result (with holders and polarities)
 		ReadBishanTogether bishan = new ReadBishanTogether(this.docId);
 		// read gate's all (gold standard) annotations
@@ -46,7 +38,7 @@ public class Doc {
 		System.out.println("after merging: "+sentences.size());
 	}
 	
-	private void generateETarget() throws IOException, GateException{
+	public void generateETarget() throws IOException, GateException{
 		// go through each sentence
 		for (ASentence aSentence:this.sentences){
 			System.out.println("sentence:");
@@ -58,7 +50,7 @@ public class Doc {
 		}  // each aSentence
 	}
 	
-	private void statistics(){
+	public void statistics(){
 		for (ASentence aSentence:this.sentences){
 			for (DirectNode direct:aSentence.bishanDirects){
 				this.gsNum += direct.eTargetsGS.size();
@@ -69,6 +61,10 @@ public class Doc {
 				}
 			}
 		}
+		
+		System.out.println("----- statistics -----");
+		System.out.println(this.corretNum*1.0/this.gsNum);
+		System.out.println(this.corretNum*1.0/this.autoNum);
 	}
 	
 	

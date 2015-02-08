@@ -20,6 +20,9 @@ public class Run {
 		GFBF gfbfLexicon = new GFBF();
 		
 		Doc doc = new Doc(docId);
+		doc.read();
+		doc.generateETarget();
+		doc.statistics();
 		
 		
 	}
