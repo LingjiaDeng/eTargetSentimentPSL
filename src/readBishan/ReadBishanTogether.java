@@ -50,6 +50,7 @@ public class ReadBishanTogether {
 							sentiment.agentStart = holder.agentStart;
 							sentiment.targets = holder.targets;
 							sentiment.targetStarts = holder.targetStarts;
+							
 							// update in the original sentimentSens
 							ArrayList<DirectNode> tmp = sentimentSens.get(sentenceIndex);
 							tmp.set(i, sentiment);
@@ -66,8 +67,18 @@ public class ReadBishanTogether {
 						sentimentSens.put(holder.sentenceIndex, tmp);
 					}
 				}  // for each unused holder DirectNode
+				
+				// filter out the neutral sentiments
+				ArrayList<DirectNode> tmp = new ArrayList<DirectNode>();
+				for (DirectNode direct:sentimentSens.get(sentenceIndex)){
+					if (!direct.polarity.equals("neutral"))
+						tmp.add(direct);
+				}
+				sentimentSens.put(sentenceIndex, tmp);
+				
 			}  // if has sentence
 		}  // for each sentence
+		
 		
 		this.sentenceHash = sentimentSens;
 		System.out.println("# sentence from Bishan: "+sentimentSens.size());

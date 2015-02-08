@@ -336,6 +336,13 @@ public class ASentence {
 	}
 	
 	private String findConSpan(int start, int end, Tree root){
+		// record the original token
+		ArrayList<String> wordsTmp = new ArrayList<String>();
+		//for (CoreLabel pair:this.sentenceSyntax.get(TokensAnnotation.class)){    // token doesn't match with parse tree = =
+		for (Tree leaf:root.getLeaves()){
+			wordsTmp.add(leaf.nodeString());
+		}
+		
 		// tmp.get(0) is the smallest constituent including the target span
 		ArrayList<Constituent> tmp = new ArrayList<Constituent>();
 		for (Constituent con:root.constituents()){
@@ -349,11 +356,6 @@ public class ASentence {
 			}
 		}  // each constituent
 		
-		//System.out.println(this.sentenceSyntax.get(TextAnnotation.class));
-		ArrayList<String> wordsTmp = new ArrayList<String>();
-		for (CoreLabel pair:this.sentenceSyntax.get(TokensAnnotation.class)){
-			wordsTmp.add(pair.originalText());
-		}
 		
 		String conSpan = tmp.get(0).toSentenceString(wordsTmp);
 		

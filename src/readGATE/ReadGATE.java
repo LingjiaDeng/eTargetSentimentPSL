@@ -114,7 +114,7 @@ public class ReadGATE {
 			aSentence.sentenceIndex = sortedStartNode.indexOf(Integer.parseInt(markup.getStartNode().getOffset().toString()));
 			aSentence.content = content;
 			
-			if (aSentence.sentenceIndex != 16)
+			if (aSentence.sentenceIndex != 1)
 				continue;
 			
 			// get syntax info (tokens, lemma, POS, parseTree)
