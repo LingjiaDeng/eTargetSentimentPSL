@@ -1,5 +1,6 @@
 package structure;
 
+import edu.stanford.nlp.trees.Tree;
 import gate.util.GateException;
 
 import java.io.IOException;
@@ -12,12 +13,24 @@ public class Doc {
 	public ArrayList<ASentence> sentences;
 	public String docId;
 	
+	private int gsNum;
+	private int autoNum;
+	private int corretNum;
 	
 	public Doc(String docId) throws IOException, GateException{
 		this.docId = docId;
 		this.sentences = new ArrayList<ASentence>();
+		this.gsNum = 0;
+		this.autoNum = 0;
+		this.corretNum = 0;
+		
 		read();
 		generateETarget();
+		statistics();
+		
+		System.out.println("----- statistics -----");
+		System.out.println(this.corretNum*1.0/this.gsNum);
+		System.out.println(this.corretNum*1.0/this.autoNum);
 		
 	}
 	
@@ -33,7 +46,7 @@ public class Doc {
 		System.out.println("after merging: "+sentences.size());
 	}
 	
-	private void generateETarget() throws IOException{
+	private void generateETarget() throws IOException, GateException{
 		// go through each sentence
 		for (ASentence aSentence:this.sentences){
 			System.out.println("sentence:");
@@ -44,4 +57,19 @@ public class Doc {
 			aSentence.expandETargetUsingGFBF();
 		}  // each aSentence
 	}
+	
+	private void statistics(){
+		for (ASentence aSentence:this.sentences){
+			for (DirectNode direct:aSentence.bishanDirects){
+				this.gsNum += direct.eTargetsGS.size();
+				this.autoNum += direct.eTargets.size();
+				for (Tree eTarget:direct.eTargetsGS){
+					if (direct.eTargets.contains(eTarget))
+						this.corretNum += 1;
+				}
+			}
+		}
+	}
+	
+	
 }

@@ -51,9 +51,11 @@ public class ReadGATE {
 	private static TreebankLanguagePack tlp;
 	private static GrammaticalStructureFactory gsf;
 	private static StanfordCoreNLP pipeline;
-	 
+	
 	
 	public ReadGATE(String docId) throws MalformedURLException, GateException{
+		
+		
 		IntiateGATE.go(docId);
 		this.doc = IntiateGATE.doc;
 		this.sentenceHash = new HashMap<Integer,ASentence>();
@@ -110,6 +112,7 @@ public class ReadGATE {
 			ASentence aSentence = new ASentence();
 			aSentence.sentenceString = sentence;
 			aSentence.sentenceIndex = sortedStartNode.indexOf(Integer.parseInt(markup.getStartNode().getOffset().toString()));
+			aSentence.content = content;
 			
 			if (aSentence.sentenceIndex != 16)
 				continue;

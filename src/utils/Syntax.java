@@ -3,14 +3,18 @@ package utils;
 import java.util.List;
 import java.util.Properties;
 
+
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.MorphaAnnotator;
+import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
+import edu.stanford.nlp.pipeline.ParserAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.pipeline.TokenizerAnnotator;
 import edu.stanford.nlp.util.CoreMap;
 
 public final class Syntax {
 	private Syntax(){
-		
 	}
 	
 	public static CoreMap parse(String sentence, StanfordCoreNLP pipeline){

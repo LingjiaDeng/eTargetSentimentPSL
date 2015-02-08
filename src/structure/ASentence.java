@@ -12,11 +12,15 @@ import java.util.Set;
 
 import gate.Annotation;
 import gate.AnnotationSet;
+import gate.DocumentContent;
 import gate.FeatureMap;
+import gate.util.GateException;
+import gate.util.InvalidOffsetException;
 
 import utils.GFBF;
 import utils.Overlap;
 
+import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
@@ -32,9 +36,8 @@ public class ASentence {
 	public String sentenceString;
 	public String sentenceTokenizedString;
 	public int sentenceIndex;
-	//public List<Word> tokens;
-	//public Tree parseTree;
 	public AnnotationSet annotations;
+	public DocumentContent content; 
 	public ArrayList<DirectNode> bishanDirects;
 	public Collection<TypedDependency> tdl;
 	public CoreMap sentenceSyntax;
@@ -43,7 +46,6 @@ public class ASentence {
 		this.sentenceString = "";
 		this.sentenceTokenizedString = "";
 		this.sentenceIndex = -1;
-		//this.tokens = new ArrayList<Word>();
 		this.bishanDirects = new ArrayList<DirectNode>();
 	}
 	
@@ -111,7 +113,8 @@ public class ASentence {
 			return true;
 		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("ccomp")  &&  GFBF.isGF(govWord))  //  sentiment(event) -> sentiment(retainer): gov must be a retainer 
 			return true;
-		
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().contains("mod"))   //  find object of a modifier
+			return true;
 		return false;
 	}
 	
@@ -135,7 +138,7 @@ public class ASentence {
 	}
 	
 	
-	public void alignGoldStandard(){
+	public void alignGoldStandard() throws GateException{
 		System.out.println("----- gold standard eTargets -----");
 		for (DirectNode bishan:this.bishanDirects){
 			System.out.println(bishan.opinionSpan);
@@ -148,23 +151,23 @@ public class ASentence {
 						eTargetAnnos.add(anno);
 				}
 			}
-			System.out.println(eTargetAnnos.size());
-			bishan.eTargetsGS.addAll(findMatchingETargetHeads(eTargetAnnos, this.sentenceSyntax.get(TreeAnnotation.class)));
+			bishan.eTargetsGS.addAll(findMatchingHeads(eTargetAnnos, this.sentenceSyntax.get(TreeAnnotation.class)));
 			
 		}
 		
 		return;
 	}
 	
-	private ArrayList<Tree> findMatchingETargetHeads(ArrayList<Annotation> eTargetAnnos, Tree root){
+	private ArrayList<Tree> findMatchingHeads(ArrayList<Annotation> eTargetAnnos, Tree root) throws GateException{
 		ArrayList<Tree> heads = new ArrayList<Tree>();
 		
-		for (Tree leaf:root.getLeaves()){
-			if (eTargetAnnos.contains(leaf.toString())){
-				heads.add(leaf);
+		for (Annotation eTarget:eTargetAnnos){
+			String eTargetSpan = this.content.getContent(eTarget.getStartNode().getOffset(), eTarget.getEndNode().getOffset()).toString();
+			for (Tree leaf:root.getLeaves()){
+				if (eTargetSpan.equals(leaf.nodeString())  &&  !heads.contains(leaf))
+					heads.add(leaf);
 			}
 		}
-		
 		
 		return heads;
 	}
@@ -245,7 +248,7 @@ public class ASentence {
 	}
 	
 	
-	public void findETarget(){
+	public void findETarget() throws IOException{
 		AnnotationSet markups = this.annotations;
 		ArrayList<DirectNode> bishans = this.bishanDirects;
 		Tree root = this.sentenceSyntax.get(TreeAnnotation.class);
@@ -266,35 +269,61 @@ public class ASentence {
 		return;
 	}
 	
-	private void findAllHeadsInTargetSpan(DirectNode directNode, Tree root){
-		if (directNode.targets.isEmpty())
-			return;
+	private void findAllHeadsInTargetSpan(DirectNode directNode, Tree root) throws IOException{
+		if (directNode.targets.isEmpty()){
+			ArrayList<Tree> headsInSubjSpan =  findAllHeadsInSubjSpan(directNode, root);
+			
+			for (Tree head:headsInSubjSpan){
+				int indexOfLeaf = root.getLeaves().indexOf(head)+1;
+				directNode.eTargets.addAll(findETargetMyself(indexOfLeaf));
+			}
+		}
 		
+		else{
+			findAllHeadsInNonEmptyTargetSpan(directNode, root);
+		}
+		
+		return;
+	}
+	
+	private ArrayList<Tree> findAllHeadsInSubjSpan(DirectNode directNode, Tree root){
+		ArrayList<Tree> returnedHeads = new ArrayList<Tree>();
+		
+		int subjStart = directNode.opinionStart;
+		int subjEnd = subjStart + directNode.opinionSpan.split(" ").length-1;
+		
+		// find the subtree corresponding to the constituent
+		ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
+		String conSpan = findConSpan(subjStart, subjEnd, root);
+		findTreeOfCon(conSpan, root, treesOfCon);
+		
+		// treesOfCon.get(0) is the constituent containing the subj span
+		// we then judge whether each leaf is in the subj span
+		// if in, return it as heads in the subj span
+		// regardless of the POS (i.e. head)
+		for (Tree head:treesOfCon.get(0).getLeaves()){
+			if (directNode.opinionSpan.contains(head.nodeString() )){
+				// deal with each head in direct node span
+				returnedHeads.add(head);
+			}
+		}
+		
+		return returnedHeads;
+	}
+	
+	private void findAllHeadsInNonEmptyTargetSpan(DirectNode directNode, Tree root){
 		for (String target:directNode.targets){
 			int targetStart = directNode.targetStarts.get(directNode.targets.indexOf(target));
 			int targetEnd = targetStart + target.split(" ").length-1;
 			
-			// tmp.get(0) is the smallest constituent including the target span
-			ArrayList<Constituent> tmp = new ArrayList<Constituent>();
-			for (Constituent con:root.constituents()){
-				if ( Overlap.intervalContains(con.start(), con.end(), targetStart, targetEnd) ){
-					if (tmp.size()==0)
-						tmp.add(con);
-					else{
-						if (tmp.get(0).contains(con) )
-							tmp.add(0, con);
-					}
-				}
-			}  // each constituent
-		
-			
 			// find the subtree corresponding to the constituent
 			ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
-			findTreeOfCon(tmp.get(0).toSentenceString((ArrayList) this.sentenceSyntax.get(TokensAnnotation.class)) , root, treesOfCon);
+			String conSpan = findConSpan(targetStart, targetEnd, root);
+			findTreeOfCon(conSpan, root, treesOfCon);
 			
 			// find the heads in the subtree
 			ArrayList<Tree> heads = new ArrayList<Tree>(); 
-			findHead(treesOfCon.get(0), heads);
+			findHeadInATree(treesOfCon.get(0), heads);
 			for (Tree head:heads){
 				if (target.contains(head.nodeString() )){
 					directNode.eTargets.add(head);
@@ -306,7 +335,46 @@ public class ASentence {
 		return;
 	}
 	
-	private void findHead(Tree root, ArrayList<Tree> heads){
+	private String findConSpan(int start, int end, Tree root){
+		// tmp.get(0) is the smallest constituent including the target span
+		ArrayList<Constituent> tmp = new ArrayList<Constituent>();
+		for (Constituent con:root.constituents()){
+			if ( Overlap.intervalContains(con.start(), con.end(), start, end) ){
+				if (tmp.size()==0)
+					tmp.add(con);
+				else{
+					if (tmp.get(0).contains(con) )
+						tmp.add(0, con);
+				}
+			}
+		}  // each constituent
+		
+		//System.out.println(this.sentenceSyntax.get(TextAnnotation.class));
+		ArrayList<String> wordsTmp = new ArrayList<String>();
+		for (CoreLabel pair:this.sentenceSyntax.get(TokensAnnotation.class)){
+			wordsTmp.add(pair.originalText());
+		}
+		
+		String conSpan = tmp.get(0).toSentenceString(wordsTmp);
+		
+		return conSpan;
+	}
+	
+	private ArrayList<Tree> findETargetMyself(int indexOfLeaf) throws IOException{
+		ArrayList<Tree> eTargets = new ArrayList<Tree>();
+		ArrayList<Tree> leaves = (ArrayList<Tree>) this.sentenceSyntax.get(TreeAnnotation.class).getLeaves();
+		
+		for (TypedDependency td:this.tdl){
+			if (rulesJudgeGov(td, indexOfLeaf))
+				eTargets.add(leaves.get(td.gov().index()-1));
+			if (rulesJudgeDep(td, indexOfLeaf))
+				eTargets.add(leaves.get(td.dep().index()-1));
+		}
+		
+		return eTargets;
+	}
+	
+	private void findHeadInATree(Tree root, ArrayList<Tree> heads){
 		// if the current node is the parent node of a particular token, and it is either noun (NN) or verb (VB), or prounoun (PRP)
 		// print it
 		if (root.isPreTerminal() && (root.label().value().startsWith("NN") || root.label().value().startsWith("VB") || root.label().value().equals("PRP") ) ){
@@ -315,7 +383,7 @@ public class ASentence {
 		
 		
 		for (Tree child: root.children()){
-			findHead(child, heads);
+			findHeadInATree(child, heads);
 		}
 		
 		return;
