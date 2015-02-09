@@ -26,8 +26,11 @@ public final class Rule {
 			return true;
 		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("ccomp")  &&  GFBF.isGF(govWord))  //  sentiment(event) -> sentiment(retainer): gov must be a retainer 
 			return true;
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().equals("xcomp")  &&  GFBF.isGF(govWord))  //  sentiment(event) -> sentiment(retainer): gov must be a retainer 
+			return true;
 		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().contains("mod"))   //  find object of a modifier
 			return true;
+		
 		return false;
 	}
 	
@@ -45,6 +48,8 @@ public final class Rule {
 		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("conj"))   // ``and''
 			return true;
 		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("ccomp")  &&  GFBF.isBF(govWord))    // sentiment(retainer) -> sentiment(event): gov must be a retainer
+			return true;
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("xcomp")  &&  GFBF.isBF(govWord))    // sentiment(retainer) -> sentiment(event): gov must be a retainer
 			return true;
 		
 		return false;
@@ -82,6 +87,8 @@ public final class Rule {
 		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("dobj") )   //  find object of a verb
 			return true;
 		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("ccomp")  )    // find ccomp of a verb
+			return true;
+		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("xcomp")  )    // find xcomp of a verb
 			return true;
 		
 		return false;

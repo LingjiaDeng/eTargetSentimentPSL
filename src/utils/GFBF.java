@@ -45,7 +45,7 @@ public class GFBF {
 		if (GFLexicon.isEmpty() || BFLexicon.isEmpty())
 			intializeLexicon();
 		
-		if (GFLexicon.contains(word))
+		if (GFLexicon.contains(word) && !BFLexicon.contains(word))
 			return true;
 			
 		return false;
@@ -55,7 +55,7 @@ public class GFBF {
 		if (GFLexicon.isEmpty() || BFLexicon.isEmpty())
 			intializeLexicon();
 		
-		if (BFLexicon.contains(word))
+		if (BFLexicon.contains(word) || !GFLexicon.contains(word))
 			return true;
 		
 		return false;

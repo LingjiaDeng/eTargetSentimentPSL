@@ -109,10 +109,12 @@ public class ASentence {
 					continue;
 				
 				String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
-				if (Rule.gfbfRulesJudgeGov(td, indexOfLeaf, govWord))
+				if (Rule.gfbfRulesJudgeGov(td, indexOfLeaf, govWord)){
 					queue.offer(leaves.get(td.gov().index()-1));
-				if (Rule.gfbfRulesJudgeDep(td, indexOfLeaf, govWord))
+				}
+				if (Rule.gfbfRulesJudgeDep(td, indexOfLeaf, govWord)){
 					queue.offer(leaves.get(td.dep().index()-1));
+				}
 			}
 		}   // while queue isn't empty
 		
@@ -264,7 +266,7 @@ public class ASentence {
 			
 			for (Tree head:headsInSubjSpan){
 				int indexOfLeaf = root.getLeaves().indexOf(head)+1;
-				directNode.eTargets.addAll(findETargetMyself(indexOfLeaf));
+				directNode.eTargets.addAll(findETargetMyself(indexOfLeaf,headsInSubjSpan));
 			}
 		}
 		
@@ -345,7 +347,7 @@ public class ASentence {
 		return conSpan;
 	}
 	
-	private ArrayList<Tree> findETargetMyself(int indexOfLeaf) throws IOException{
+	private ArrayList<Tree> findETargetMyself(int indexOfLeaf, ArrayList<Tree> headsInSubjSpan) throws IOException{
 		ArrayList<Tree> eTargets = new ArrayList<Tree>();
 		ArrayList<Tree> leaves = (ArrayList<Tree>) this.sentenceSyntax.get(TreeAnnotation.class).getLeaves();
 		
@@ -354,9 +356,9 @@ public class ASentence {
 				continue;
 			
 			String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
-			if (Rule.targetRulesJudgeGov(td, indexOfLeaf, govWord))
+			if (Rule.targetRulesJudgeGov(td, indexOfLeaf, govWord) && !headsInSubjSpan.contains(leaves.get(td.gov().index()-1)) )
 				eTargets.add(leaves.get(td.gov().index()-1));
-			if (Rule.targetRulesJudgeDep(td, indexOfLeaf, govWord))
+			if (Rule.targetRulesJudgeDep(td, indexOfLeaf, govWord)  &&  !headsInSubjSpan.contains(leaves.get(td.dep().index()-1)) )
 				eTargets.add(leaves.get(td.dep().index()-1));
 		}
 		
