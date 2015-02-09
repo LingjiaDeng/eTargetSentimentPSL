@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ import utils.Overlap;
 import utils.Rule;
 
 import edu.stanford.nlp.dcoref.CorefChain;
+import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefAnnotation;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefClusterAnnotation;
@@ -47,13 +49,14 @@ public class ASentence {
 	public ArrayList<DirectNode> bishanDirects;
 	public Collection<TypedDependency> tdl;
 	public CoreMap sentenceSyntax;
-	public Map<Integer, CorefChain> corefHash;
+	public HashMap<Tree, ArrayList<Tree>> corefHash;
 	
 	public ASentence(){
 		this.sentenceString = "";
 		this.sentenceTokenizedString = "";
 		this.sentenceIndex = -1;
 		this.bishanDirects = new ArrayList<DirectNode>();
+		this.corefHash = new HashMap<Tree, ArrayList<Tree>>();
 		
 	}
 	
@@ -62,22 +65,16 @@ public class ASentence {
 		for (DirectNode bishan:this.bishanDirects){
 			System.out.println(bishan.opinionSpan);
 			bishan.eTargets = expandETargetUsingGFBF(bishan.eTargets);
-			
-			System.out.println(bishan.eTargets);
-			
+			if (bishan.eTargets.isEmpty() || bishan.eTargets.size() == 0){
+				System.out.println(bishan.eTargets);
+			}
+			else{
+				for (Tree eTarget:bishan.eTargets){
+					findCoref(eTarget, bishan);
+				}
+				System.out.println(bishan.eTargets);
+			}
 		}  // each direct node
-		
-		return;
-	}
-	
-	private void findCoref(){
-		Map<Integer, CorefChain> corefs = this.corefHash;
-		for (Integer chainId: corefs.keySet()){
-        	System.out.println(chainId);
-        	System.out.println(corefs.get(chainId));
-        	CorefChain chain = corefs.get(chainId);
-        }
-		
 		
 		return;
 	}
@@ -235,8 +232,6 @@ public class ASentence {
 	
 	
 	public void findETarget() throws IOException{
-		findCoref();
-		
 		AnnotationSet markups = this.annotations;
 		ArrayList<DirectNode> bishans = this.bishanDirects;
 		Tree root = this.sentenceSyntax.get(TreeAnnotation.class);
@@ -248,9 +243,15 @@ public class ASentence {
 			System.out.println(directNode.opinionSpan);
 			System.out.println(directNode.targets);
 			findAllHeadsInTargetSpan(directNode, root);
-			System.out.println(directNode.eTargets);
-			// next we fine/filter more eTargets in the sentence
-			// next we print in PSL format
+			if (directNode.eTargets.isEmpty() || directNode.eTargets.size() == 0){
+				System.out.println(directNode.eTargets);
+			}
+			else{
+				for (Tree eTarget:directNode.eTargets){
+					findCoref(eTarget, directNode);
+				}
+				System.out.println(directNode.eTargets);
+			}
 			
 		}  // each direct node
 		
@@ -268,7 +269,25 @@ public class ASentence {
 		}
 		
 		else{
-			findAllHeadsInNonEmptyTargetSpan(directNode, root);
+			for (String target:directNode.targets){
+				int targetStart = directNode.targetStarts.get(directNode.targets.indexOf(target));
+				int targetEnd = targetStart + target.split(" ").length-1;
+				
+				// find the subtree corresponding to the constituent
+				ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
+				String conSpan = findConSpan(targetStart, targetEnd, root);
+				findTreeOfCon(conSpan, root, treesOfCon);
+				
+				// find the heads in the subtree
+				ArrayList<Tree> heads = new ArrayList<Tree>(); 
+				findHeadInATree(treesOfCon.get(0), heads);
+				for (Tree head:heads){
+					if (target.contains(head.nodeString() )){
+						directNode.eTargets.add(head);
+					}
+				}
+				
+			} // each target
 		}
 		
 		return;
@@ -297,30 +316,6 @@ public class ASentence {
 		}
 		
 		return returnedHeads;
-	}
-	
-	private void findAllHeadsInNonEmptyTargetSpan(DirectNode directNode, Tree root){
-		for (String target:directNode.targets){
-			int targetStart = directNode.targetStarts.get(directNode.targets.indexOf(target));
-			int targetEnd = targetStart + target.split(" ").length-1;
-			
-			// find the subtree corresponding to the constituent
-			ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
-			String conSpan = findConSpan(targetStart, targetEnd, root);
-			findTreeOfCon(conSpan, root, treesOfCon);
-			
-			// find the heads in the subtree
-			ArrayList<Tree> heads = new ArrayList<Tree>(); 
-			findHeadInATree(treesOfCon.get(0), heads);
-			for (Tree head:heads){
-				if (target.contains(head.nodeString() )){
-					directNode.eTargets.add(head);
-				}
-			}
-			
-		} // each target
-		
-		return;
 	}
 	
 	private String findConSpan(int start, int end, Tree root){
@@ -406,6 +401,14 @@ public class ASentence {
 		for (Tree child:root.children()){
 			findTreeOfCon(constituentSpan, child, treesOfCon);
 		}
+		
+		return;
+	}
+	
+	private void findCoref(Tree leaf, DirectNode direct){
+		if (this.corefHash.containsKey(leaf))
+			direct.eTargets.addAll(this.corefHash.get(leaf));
+		
 		
 		return;
 	}

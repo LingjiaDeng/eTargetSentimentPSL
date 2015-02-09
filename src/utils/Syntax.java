@@ -1,5 +1,6 @@
 package utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import edu.stanford.nlp.pipeline.TokenizerAnnotator;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.GrammaticalStructureFactory;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
+import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.util.CoreMap;
@@ -88,13 +90,36 @@ public class Syntax {
         Annotation document = new Annotation(span);
         this.pipeline.annotate(document);
         
+        // syntax
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-        sentence.corefHash = document.get(CorefChainAnnotation.class);
-        
         sentence.sentenceSyntax = sentences.get(0);
-        
+        // add dependency parser
         GrammaticalStructure gs = this.gsf.newGrammaticalStructure(sentence.sentenceSyntax.get(TreeAnnotation.class));
         sentence.tdl = gs.typedDependencies();
+        
+        // translate the co-references from stanford parser into my representation
+        Map<Integer, CorefChain> corefHash = document.get(CorefChainAnnotation.class);
+        for (Integer chainId:corefHash.keySet()){
+        	CorefChain chain = corefHash.get(chainId);
+        	if (chain.getMentionsInTextualOrder().size() < 2)
+        		continue;
+        	
+        	ArrayList<Tree> cmLeaves = new ArrayList<Tree>();
+        	for (CorefMention cm:chain.getMentionsInTextualOrder()){
+        		int index = cm.startIndex;
+        		Tree cmLeaf = sentence.sentenceSyntax.get(TreeAnnotation.class).getLeaves().get(index);
+        		cmLeaves.add(cmLeaf);
+        	}
+        	
+        	for (Tree cmLeaf:cmLeaves){
+        		if (sentence.corefHash.containsKey(cmLeaf)){
+        			ArrayList<Tree> tmp = sentence.corefHash.get(cmLeaf);
+        			tmp.addAll(cmLeaves);
+        			sentence.corefHash.put(cmLeaf, tmp);
+        		}
+        	}
+        	
+        }
         
         return;
 	}
