@@ -1,13 +1,24 @@
 package structure;
 
+import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetBeginAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetEndAnnotation;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.util.CoreMap;
+import gate.Annotation;
+import gate.AnnotationSet;
 import gate.util.GateException;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import readBishan.ReadBishanTogether;
 import readGATE.ReadGATE;
+import utils.Path;
+import utils.Syntax;
 
 public class Doc {
 	public ArrayList<ASentence> sentences;
@@ -16,6 +27,8 @@ public class Doc {
 	private int gsNum;
 	private int autoNum;
 	private int corretNum;
+	private static Syntax parse;
+	//private List<CoreMap> sentencesSyntax;
 	
 	public Doc(String docId) throws IOException, GateException{
 		this.docId = docId;
@@ -23,23 +36,89 @@ public class Doc {
 		this.gsNum = 0;
 		this.autoNum = 0;
 		this.corretNum = 0;
+		this.parse = new Syntax();
+	}
+	
+	public void parseAsAWholeDoc() throws IOException{
+		File f = new File(Path.getDocRoot()+docId);
 		
+		FileReader fr = new FileReader(f);
+		BufferedReader br = new BufferedReader(fr);
+		
+		String docSpan = "";
+		String line = "";
+		while ( (line = br.readLine()) != null){
+			docSpan += line;
+		}
+		
+		br.close();
+		fr.close();
+		
+		//this.parse.parseDoc(docSpan);
+		//this.sentencesSyntax = this.parse.sentences;
+		
+		return;
+	}
+	
+	public void parse() throws IOException, GateException{
+		if (this.sentences.isEmpty())
+			read();
+		
+		for (ASentence sentence:sentences){
+			this.parse.parseSentence(sentence);
+			
+		}
 	}
 	
 	public void read() throws IOException, GateException{
-		// read bishan's result (with holders and polarities)
 		ReadBishanTogether bishan = new ReadBishanTogether(this.docId);
-		// read gate's all (gold standard) annotations
 		ReadGATE gate = new ReadGATE(docId);
-		
-		// create the sentence list where
-		// each sentence is a structure
 		this.sentences = gate.addBishanResults(bishan.sentenceHash,this.sentences);
+		
 		System.out.println("after merging: "+sentences.size());
 	}
 	
+	
+	/*
+	 * alignSentenceWithStanfordParser
+	public void alignSentenceWithStanfordSyntax() throws IOException, GateException{
+		if (this.sentencesSyntax.isEmpty()){
+			parseDoc();
+		}
+		if (this.sentences.isEmpty()){
+			read();
+		}
+		
+		for (ASentence sentence:this.sentences){
+			AnnotationSet insides = sentence.annotations.get("inside");
+			int sentenceStart = -1;
+			int sentenceEnd = -1;
+			for (Annotation inside:insides){
+				sentenceStart = inside.getStartNode().getOffset().intValue();
+				sentenceEnd = inside.getEndNode().getOffset().intValue();
+			}
+			
+			System.out.println(sentenceStart+" "+sentenceEnd);
+			System.out.println(sentence.sentenceTokenizedString);
+			
+			for (CoreMap sentenceSyntax:this.sentencesSyntax){
+				System.out.print(sentenceSyntax.get(CharacterOffsetBeginAnnotation.class)-1);
+				System.out.print(" ");
+				System.out.println(sentenceSyntax.get(CharacterOffsetEndAnnotation.class)-1);
+				System.out.println(sentenceSyntax.toString());
+				if (sentenceSyntax.get(CharacterOffsetBeginAnnotation.class)-1 == sentenceStart
+						&& sentenceSyntax.get(CharacterOffsetEndAnnotation.class)-1 == sentenceEnd){
+					sentence.sentenceSyntax = sentenceSyntax;
+				}
+			}
+		}
+		
+		
+		return;
+	}
+	*/
+	
 	public void generateETarget() throws IOException, GateException{
-		// go through each sentence
 		for (ASentence aSentence:this.sentences){
 			System.out.println("sentence:");
 			System.out.println(sentences.get(0).sentenceString);

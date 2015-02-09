@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -21,6 +22,10 @@ import utils.GFBF;
 import utils.Overlap;
 import utils.Rule;
 
+import edu.stanford.nlp.dcoref.CorefChain;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefAnnotation;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefClusterAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Word;
@@ -42,12 +47,14 @@ public class ASentence {
 	public ArrayList<DirectNode> bishanDirects;
 	public Collection<TypedDependency> tdl;
 	public CoreMap sentenceSyntax;
+	public Map<Integer, CorefChain> corefHash;
 	
 	public ASentence(){
 		this.sentenceString = "";
 		this.sentenceTokenizedString = "";
 		this.sentenceIndex = -1;
 		this.bishanDirects = new ArrayList<DirectNode>();
+		
 	}
 	
 	public void expandETargetUsingGFBF() throws IOException{
@@ -59,6 +66,18 @@ public class ASentence {
 			System.out.println(bishan.eTargets);
 			
 		}  // each direct node
+		
+		return;
+	}
+	
+	private void findCoref(){
+		Map<Integer, CorefChain> corefs = this.corefHash;
+		for (Integer chainId: corefs.keySet()){
+        	System.out.println(chainId);
+        	System.out.println(corefs.get(chainId));
+        	CorefChain chain = corefs.get(chainId);
+        }
+		
 		
 		return;
 	}
@@ -216,6 +235,8 @@ public class ASentence {
 	
 	
 	public void findETarget() throws IOException{
+		findCoref();
+		
 		AnnotationSet markups = this.annotations;
 		ArrayList<DirectNode> bishans = this.bishanDirects;
 		Tree root = this.sentenceSyntax.get(TreeAnnotation.class);

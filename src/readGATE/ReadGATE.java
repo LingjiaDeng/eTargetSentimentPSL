@@ -48,9 +48,9 @@ public class ReadGATE {
 	public HashMap<Integer, ArrayList<DirectNode>> bishanSentenceHash;
 	public HashMap<Integer,ASentence> sentenceHash;
 	//private static LexicalizedParser lp;
-	private static TreebankLanguagePack tlp;
-	private static GrammaticalStructureFactory gsf;
-	private static StanfordCoreNLP pipeline;
+	//private static TreebankLanguagePack tlp;
+	//private static GrammaticalStructureFactory gsf;
+	//private static StanfordCoreNLP pipeline;
 	
 	
 	public ReadGATE(String docId) throws MalformedURLException, GateException{
@@ -62,12 +62,10 @@ public class ReadGATE {
 		this.bishanSentenceHash = new HashMap<Integer,ArrayList<DirectNode>>();
 		//this.lp =  LexicalizedParser.loadModel(
 			//	"/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2013-06-20/englishPCFG.ser.gz","-maxLength", "80");
-		this.tlp = new PennTreebankLanguagePack();
-		this.gsf = tlp.grammaticalStructureFactory();
+		//this.tlp = new PennTreebankLanguagePack();
+		//this.gsf = tlp.grammaticalStructureFactory();
 		
-		Properties props = new Properties();
-	    props.put("annotators", "tokenize, ssplit, pos, lemma, parse");
-	    this.pipeline = new StanfordCoreNLP(props);
+		
 		
 		readGATE();
 	}
@@ -91,6 +89,16 @@ public class ReadGATE {
 		return sentences;
 	}
 	
+	public void alignSentenceWithStanfordSyntax(List<CoreMap> sentencesSytax){
+		for (Integer sentenceIndex:this.sentenceHash.keySet()){
+			ASentence aSentence = this.sentenceHash.get(sentenceIndex);
+			
+			for (CoreMap sentenceSyntax:sentencesSytax){
+			}
+		}
+		
+		return;
+	}
 	
 	private void readGATE() throws GateException{
 		DocumentContent content = this.doc.getContent();
@@ -118,11 +126,16 @@ public class ReadGATE {
 			if (aSentence.sentenceIndex != 1)
 				continue;
 			
+			/*
+			Syntax stanfordParser = new Syntax();
+			stanfordParser.parseSentence(sentence);
 			// get syntax info (tokens, lemma, POS, parseTree)
-			aSentence.sentenceSyntax = Syntax.parse(sentence, this.pipeline);
+			aSentence.sentenceSyntax = stanfordParser.sentenceCoreMap;
 			// dependency parser
 			GrammaticalStructure gs = this.gsf.newGrammaticalStructure(aSentence.sentenceSyntax.get(TreeAnnotation.class));
 			aSentence.tdl = gs.typedDependencies();
+			aSentence.corefHash = stanfordParser.corefHash;
+			*/
 			
 			/*
 			// tokenize and get the parse

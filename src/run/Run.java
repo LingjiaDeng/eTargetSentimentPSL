@@ -21,8 +21,12 @@ public class Run {
 		
 		Doc doc = new Doc(docId);
 		doc.read();
+		doc.parse();
+		
+		
 		doc.generateETarget();
 		doc.statistics();
+		
 		
 		
 	}

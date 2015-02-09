@@ -36,6 +36,9 @@ public class GFBF {
 			else if (items[1].equals("-Effect"))
 				BFLexicon.addAll(words);
 		}
+		
+		br.close();
+		fr.close();
 	}
 	
 	public static boolean isGF(String word) throws IOException{
