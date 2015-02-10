@@ -32,6 +32,8 @@ import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations.AnnotatedTree;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.trees.Constituent;
@@ -245,6 +247,8 @@ public class ASentence {
 			System.out.println(directNode.opinionSpan);
 			System.out.println(directNode.targets);
 			findAllHeadsInTargetSpan(directNode, root);
+			findMoreByStanford(directNode);
+			
 			if (directNode.eTargets.isEmpty() || directNode.eTargets.size() == 0){
 				System.out.println(directNode.eTargets);
 			}
@@ -256,6 +260,54 @@ public class ASentence {
 			}
 			
 		}  // each direct node
+		
+		return;
+	}
+	
+	private void findMoreByStanford(DirectNode direct){
+		if (!direct.eTargets.isEmpty() && direct.eTargets.size() > 0)
+			return;
+		
+		int subjStart = direct.opinionStart;
+		int subjEnd = subjStart + direct.opinionSpan.split(" ").length-1;
+		
+		// find the subtree corresponding to the constituent
+		Tree sentiTreeRoot = this.sentenceSyntax.get(AnnotatedTree.class);
+		ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
+		String conSpan = findConSpan(subjStart, subjEnd, sentiTreeRoot);
+		findTreeOfCon(conSpan, sentiTreeRoot, treesOfCon);
+		
+		Queue<Tree> queue = new LinkedList<Tree>();
+		queue.offer(treesOfCon.get(0));
+		while ( !queue.isEmpty() ){
+			Tree subTree = queue.poll();
+			if (!subTree.isLeaf()){
+				// put eTargets in
+				int polarityNumStanford = RNNCoreAnnotations.getPredictedClass(subTree);
+				if ( (direct.polarity.startsWith("pos") && polarityNumStanford>2) 
+						|| (direct.polarity.startsWith("neg") && polarityNumStanford<2) )
+				direct.eTargets.addAll(subTree.getLeaves());
+				// put children in the queue
+				for (Tree child:subTree.getChildrenAsList()){
+					queue.offer(child);
+				}
+			}
+		}
+		
+		/*
+		for (Tree tree:treesOfCon){
+			System.out.println(tree.nodeString()+" "+tree.getChild(0).nodeString());
+			if (tree.isLeaf())
+				continue;
+			
+			int polarityNumStanford = RNNCoreAnnotations.getPredictedClass(tree);
+			System.out.println(polarityNumStanford);
+			if ( (direct.polarity.startsWith("pos") && polarityNumStanford>2) 
+					|| (direct.polarity.startsWith("neg") && polarityNumStanford<2) )
+			direct.eTargets.add(tree);
+			
+		}
+		*/
 		
 		return;
 	}

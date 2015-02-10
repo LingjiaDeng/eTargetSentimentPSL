@@ -2,6 +2,8 @@ package structure;
 
 import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetBeginAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetEndAnnotation;
+import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations.AnnotatedTree;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
 import gate.Annotation;
@@ -17,6 +19,7 @@ import java.util.List;
 
 import readBishan.ReadBishanTogether;
 import readGATE.ReadGATE;
+import utils.Overlap;
 import utils.Path;
 import utils.Syntax;
 
@@ -61,10 +64,11 @@ public class Doc {
 	}
 	
 	public void parse() throws IOException, GateException{
+		System.out.println("Parsing...");
 		if (this.sentences.isEmpty())
 			read();
 		
-		for (ASentence sentence:sentences){
+		for (ASentence sentence:this.sentences){
 			this.parse.parseSentence(sentence);
 			
 		}
@@ -74,6 +78,8 @@ public class Doc {
 		ReadBishanTogether bishan = new ReadBishanTogether(this.docId);
 		ReadGATE gate = new ReadGATE(docId);
 		this.sentences = gate.addBishanResults(bishan.sentenceHash,this.sentences);
+		
+		
 		
 		System.out.println("after merging: "+sentences.size());
 	}
@@ -125,7 +131,9 @@ public class Doc {
 			
 			aSentence.alignGoldStandard();
 			aSentence.findETarget();
+			statistics();
 			aSentence.expandETargetUsingGFBF();
+			statistics();
 		}  // each aSentence
 	}
 	
@@ -145,8 +153,11 @@ public class Doc {
 		}
 		
 		System.out.println("----- statistics -----");
-		System.out.println("recall: "+this.corretNum*1.0/this.gsNum);
-		System.out.println("precision: "+this.corretNum*1.0/this.autoNum);
+		double recall = this.corretNum*1.0/this.gsNum;
+		double precision = this.corretNum*1.0/this.autoNum;
+		System.out.println("recall: "+recall);
+		System.out.println("precision: "+precision);
+		System.out.println("F-measure:"+(2*recall*precision)/(recall+precision));
 	}
 	
 	

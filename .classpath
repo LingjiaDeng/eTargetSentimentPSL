@@ -7,7 +7,6 @@
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/xmlunit.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/xmlbeans.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/xercesImpl.jar"/>
-	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/woodstox-core-lgpl.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/tika-parsers.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/tika-core.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/GATE/lib/stax2-api.jar"/>
@@ -51,5 +50,6 @@
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1-models.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1-javadoc.jar"/>
 	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1.jar"/>
+	<classpathentry kind="lib" path="/afs/cs.pitt.edu/usr0/lid29/Documents/RESOURCES/ejml-0.23.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

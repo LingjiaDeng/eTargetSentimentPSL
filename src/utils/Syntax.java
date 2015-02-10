@@ -46,7 +46,9 @@ public class Syntax {
 	
 	public Syntax(){
 		Properties props = new Properties();
-	    props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+		
+	    props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, sentiment, dcoref");
+		
 	    this.pipeline = new StanfordCoreNLP(props);
 	    this.tlp = new PennTreebankLanguagePack();
 		this.gsf = tlp.grammaticalStructureFactory();
