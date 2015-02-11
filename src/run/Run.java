@@ -24,6 +24,8 @@ public class Run {
 		doc.parse();
 		doc.generateETarget();
 		
+		doc.statistics();
+		
 		
 		
 	}

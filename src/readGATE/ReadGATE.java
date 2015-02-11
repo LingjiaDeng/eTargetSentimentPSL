@@ -82,6 +82,8 @@ public class ReadGATE {
 			if (this.bishanSentenceHash.containsKey(sentenceIndex)){
 				aSentence.bishanDirects = this.bishanSentenceHash.get(sentenceIndex);
 				aSentence.sentenceTokenizedString = aSentence.bishanDirects.get(0).sentence;
+				if (aSentence.bishanDirects.get(0).opinionStart == -1)
+					aSentence.bishanDirects = new ArrayList<DirectNode>();
 			}
 			sentences.add(aSentence);
 		}
@@ -123,8 +125,12 @@ public class ReadGATE {
 			aSentence.sentenceIndex = sortedStartNode.indexOf(Integer.parseInt(markup.getStartNode().getOffset().toString()));
 			aSentence.content = content;
 			
+			/*
 			if (aSentence.sentenceIndex != 1)
 				continue;
+			
+			*/
+			
 			
 			/*
 			Syntax stanfordParser = new Syntax();

@@ -294,21 +294,6 @@ public class ASentence {
 			}
 		}
 		
-		/*
-		for (Tree tree:treesOfCon){
-			System.out.println(tree.nodeString()+" "+tree.getChild(0).nodeString());
-			if (tree.isLeaf())
-				continue;
-			
-			int polarityNumStanford = RNNCoreAnnotations.getPredictedClass(tree);
-			System.out.println(polarityNumStanford);
-			if ( (direct.polarity.startsWith("pos") && polarityNumStanford>2) 
-					|| (direct.polarity.startsWith("neg") && polarityNumStanford<2) )
-			direct.eTargets.add(tree);
-			
-		}
-		*/
-		
 		return;
 	}
 	

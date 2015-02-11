@@ -37,6 +37,8 @@ public class ReadBishanTogether {
 		
 		for (Integer sentenceIndex:sentimentSens.keySet()){
 			ArrayList<DirectNode> sentiments  = new ArrayList<DirectNode>(sentimentSens.get(sentenceIndex));
+			DirectNode tmpNode = sentiments.get(0);
+			
 			if (holderSens.containsKey(sentenceIndex)){
 				ArrayList<DirectNode> holders = holderSens.get(sentenceIndex);
 				
@@ -71,14 +73,15 @@ public class ReadBishanTogether {
 				// filter out the neutral sentiments
 				ArrayList<DirectNode> tmp = new ArrayList<DirectNode>();
 				for (DirectNode direct:sentimentSens.get(sentenceIndex)){
-					if (!direct.polarity.equals("neutral"))
+					if (!direct.polarity.equals("neutral") || direct.opinionStart == -1)
 						tmp.add(direct);
 				}
-				sentimentSens.put(sentenceIndex, tmp);
-				
+				if (tmp.isEmpty() || tmp.size() == 0){
+					tmp.add(tmpNode);
+				}
+				sentimentSens.put(sentenceIndex, tmp);	
 			}  // if has sentence
 		}  // for each sentence
-		
 		
 		this.sentenceHash = sentimentSens;
 		System.out.println("# sentence from Bishan: "+sentimentSens.size());

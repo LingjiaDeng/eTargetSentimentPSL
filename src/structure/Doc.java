@@ -79,8 +79,6 @@ public class Doc {
 		ReadGATE gate = new ReadGATE(docId);
 		this.sentences = gate.addBishanResults(bishan.sentenceHash,this.sentences);
 		
-		
-		
 		System.out.println("after merging: "+sentences.size());
 	}
 	
@@ -131,9 +129,9 @@ public class Doc {
 			
 			aSentence.alignGoldStandard();
 			aSentence.findETarget();
-			statistics();
+			//statistics();
 			aSentence.expandETargetUsingGFBF();
-			statistics();
+			//statistics();
 		}  // each aSentence
 	}
 	

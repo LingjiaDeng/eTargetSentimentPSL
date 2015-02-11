@@ -62,7 +62,13 @@ public class ReadBishanSentiment {
 						// add the anno into directs
 						directs.add(anno);
 					}  // for each opinion
-				}  
+				}
+				else{
+					DirectNode anno = new DirectNode();
+					anno.sentenceIndex = sentenceIndex;
+					anno.sentence = sentence.trim();
+					directs.add(anno);
+				}
 			
 				sentence = "";
 				opinions = new ArrayList<String>();
