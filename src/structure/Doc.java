@@ -27,9 +27,9 @@ public class Doc {
 	public ArrayList<ASentence> sentences;
 	public String docId;
 	
-	private int gsNum;
-	private int autoNum;
-	private int corretNum;
+	public int gsNum;
+	public int autoNum;
+	public int corretNum;
 	private static Syntax parse;
 	//private List<CoreMap> sentencesSyntax;
 	
@@ -83,6 +83,48 @@ public class Doc {
 	}
 	
 	
+	public void generateETarget() throws IOException, GateException{
+		for (ASentence aSentence:this.sentences){
+			if (aSentence.multiSentenceFlag)
+				continue;
+			
+			System.out.println("=====  sentence ======");
+			System.out.println(aSentence.sentenceTokenizedString);
+			aSentence.alignGoldStandard();
+			//aSentence.findETarget();
+			aSentence.extractAllETargetsInCon();
+			
+			
+			
+			
+			//aSentence.expandETargetUsingGFBF();
+			aSentence.lastFiltering();
+		}  // each aSentence
+	}
+	
+	public void statistics(){
+		for (ASentence aSentence:this.sentences){
+			for (DirectNode direct:aSentence.bishanDirects){
+				if (direct.eTargetsGS.isEmpty() || direct.eTargetsGS.size() == 0)
+					continue;
+				
+				this.gsNum += direct.eTargetsGS.size();
+				this.autoNum += direct.eTargets.size();
+				for (Tree eTarget:direct.eTargetsGS){
+					if (direct.eTargets.contains(eTarget))
+						this.corretNum += 1;
+				}
+			}
+		}
+		
+		System.out.println("----- statistics -----");
+		double recall = this.corretNum*1.0/this.gsNum;
+		double precision = this.corretNum*1.0/this.autoNum;
+		System.out.println("recall: "+recall);
+		System.out.println("precision: "+precision);
+		System.out.println("F-measure:"+(2*recall*precision)/(recall+precision));
+	}
+	
 	/*
 	 * alignSentenceWithStanfordParser
 	public void alignSentenceWithStanfordSyntax() throws IOException, GateException{
@@ -121,42 +163,6 @@ public class Doc {
 		return;
 	}
 	*/
-	
-	public void generateETarget() throws IOException, GateException{
-		for (ASentence aSentence:this.sentences){
-			System.out.println("sentence:");
-			System.out.println(sentences.get(0).sentenceString);
-			
-			aSentence.alignGoldStandard();
-			aSentence.findETarget();
-			//statistics();
-			aSentence.expandETargetUsingGFBF();
-			//statistics();
-		}  // each aSentence
-	}
-	
-	public void statistics(){
-		for (ASentence aSentence:this.sentences){
-			for (DirectNode direct:aSentence.bishanDirects){
-				if (direct.eTargetsGS.isEmpty() || direct.eTargetsGS.size() == 0)
-					continue;
-				
-				this.gsNum += direct.eTargetsGS.size();
-				this.autoNum += direct.eTargets.size();
-				for (Tree eTarget:direct.eTargetsGS){
-					if (direct.eTargets.contains(eTarget))
-						this.corretNum += 1;
-				}
-			}
-		}
-		
-		System.out.println("----- statistics -----");
-		double recall = this.corretNum*1.0/this.gsNum;
-		double precision = this.corretNum*1.0/this.autoNum;
-		System.out.println("recall: "+recall);
-		System.out.println("precision: "+precision);
-		System.out.println("F-measure:"+(2*recall*precision)/(recall+precision));
-	}
 	
 	
 }

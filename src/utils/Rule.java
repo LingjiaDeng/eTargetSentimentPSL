@@ -52,6 +52,7 @@ public final class Rule {
 		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("xcomp")  &&  GFBF.isBF(govWord))    // sentiment(retainer) -> sentiment(event): gov must be a retainer
 			return true;
 		
+		
 		return false;
 	}
 	
@@ -74,6 +75,10 @@ public final class Rule {
 		*/
 		if ( td.dep().index()==indexOfLeaf && td.reln().toString().contains("mod"))   //  find object of a modifier
 			return true;
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().contains("prep_of"))  
+			return true;
+		else if ( td.dep().index()==indexOfLeaf && td.reln().toString().contains("prep_as"))   
+			return true;
 		return false;
 	}
 	
@@ -90,6 +95,30 @@ public final class Rule {
 			return true;
 		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("xcomp")  )    // find xcomp of a verb
 			return true;
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("prep_of")  )   
+			return true;
+		else if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("prep_as")  )    
+			return true;
+		
+		return false;
+	}
+	
+	public static boolean targetRulesJudgeGovNounOfAdj(TypedDependency td, int indexOfLeaf, String govWord) throws IOException{
+		if (td.gov().index() == 0)
+			return false;
+		
+		if ( td.dep().index()==indexOfLeaf && td.reln().toString().contains("mod") )   
+			return true; 
+		
+		return false;
+	}
+	
+	public static boolean targetRulesJudgeDepNounOfAdj(TypedDependency td, int indexOfLeaf, String govWord) throws IOException{
+		if (td.gov().index() == 0)
+			return false;
+		
+		if ( td.gov().index()==indexOfLeaf && td.reln().toString().equals("nsubj") )   
+			return true; 
 		
 		return false;
 	}

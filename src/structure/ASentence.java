@@ -21,6 +21,7 @@ import gate.util.InvalidOffsetException;
 
 import utils.GFBF;
 import utils.Overlap;
+import utils.Clean;
 import utils.Rule;
 
 import edu.stanford.nlp.dcoref.CorefChain;
@@ -52,6 +53,7 @@ public class ASentence {
 	public Collection<TypedDependency> tdl;
 	public CoreMap sentenceSyntax;
 	public HashMap<Tree, ArrayList<Tree>> corefHash;
+	public boolean multiSentenceFlag;
 	
 	public ASentence(){
 		this.sentenceString = "";
@@ -59,23 +61,34 @@ public class ASentence {
 		this.sentenceIndex = -1;
 		this.bishanDirects = new ArrayList<DirectNode>();
 		this.corefHash = new HashMap<Tree, ArrayList<Tree>>();
+		this.multiSentenceFlag = false;
 		
+	}
+	
+	public void lastFiltering(){
+		for (DirectNode direct:this.bishanDirects){
+			for (Tree eTarget:direct.eTargets){
+				findCoref(eTarget, direct);
+			}
+			
+			direct.eTargets = Clean.removeDuplicate(direct.eTargets);
+			/*
+			Tree root = this.sentenceSyntax.get(TreeAnnotation.class);
+			direct.eTargets = Clean.removeNonHead(direct.eTargets, root);
+			*/
+		}
 	}
 	
 	public void expandETargetUsingGFBF() throws IOException{
 		System.out.println("----- 2nd: adding gfbf rules -----");
 		for (DirectNode bishan:this.bishanDirects){
+			System.out.println("<"+bishan.agent+">");
 			System.out.println(bishan.opinionSpan);
+			
 			bishan.eTargets = expandETargetUsingGFBF(bishan.eTargets);
-			if (bishan.eTargets.isEmpty() || bishan.eTargets.size() == 0){
-				System.out.println(bishan.eTargets);
-			}
-			else{
-				for (Tree eTarget:bishan.eTargets){
-					findCoref(eTarget, bishan);
-				}
-				System.out.println(bishan.eTargets);
-			}
+			bishan.eTargets = Clean.removeDuplicate(bishan.eTargets);
+			
+			System.out.println(bishan.eTargets);
 		}  // each direct node
 		
 		return;
@@ -127,6 +140,7 @@ public class ASentence {
 	public void alignGoldStandard() throws GateException{
 		System.out.println("----- gold standard eTargets -----");
 		for (DirectNode bishan:this.bishanDirects){
+			System.out.println("<"+bishan.agent+">");
 			System.out.println(bishan.opinionSpan);
 			ArrayList<Annotation> subjAnnos = findMatchingSubjMarkup(bishan, this.annotations);
 			ArrayList<Annotation> eTargetAnnos = new ArrayList<Annotation>();
@@ -236,7 +250,6 @@ public class ASentence {
 	
 	
 	public void findETarget() throws IOException{
-		AnnotationSet markups = this.annotations;
 		ArrayList<DirectNode> bishans = this.bishanDirects;
 		Tree root = this.sentenceSyntax.get(TreeAnnotation.class);
 		//List<CoreLabel> words = this.sentenceSyntax.get(TokensAnnotation.class);
@@ -244,24 +257,64 @@ public class ASentence {
 		System.out.println("----- 1st: eTargets in target span -----");
 		for (DirectNode directNode:bishans){
 			// first we find all etargets in the target span
+			System.out.println("<"+directNode.agent+">");
 			System.out.println(directNode.opinionSpan);
 			System.out.println(directNode.targets);
-			findAllHeadsInTargetSpan(directNode, root);
-			findMoreByStanford(directNode);
 			
-			if (directNode.eTargets.isEmpty() || directNode.eTargets.size() == 0){
-				System.out.println(directNode.eTargets);
-			}
-			else{
-				for (Tree eTarget:directNode.eTargets){
-					findCoref(eTarget, directNode);
-				}
-				System.out.println(directNode.eTargets);
-			}
+			findAllHeadsInTargetSpan(directNode, root);
+			directNode.eTargets = Clean.removeDuplicate(directNode.eTargets);
+			
+			findMoreByStanford(directNode);
+			directNode.eTargets = Clean.removeDuplicate(directNode.eTargets);
+			
+			System.out.println(directNode.eTargets);
 			
 		}  // each direct node
 		
 		return;
+	}
+	
+	public void extractAllETargetsInCon(){
+		ArrayList<DirectNode> bishans = this.bishanDirects;
+		Tree root = this.sentenceSyntax.get(TreeAnnotation.class);
+		//List<CoreLabel> words = this.sentenceSyntax.get(TokensAnnotation.class);
+		
+		System.out.println("----- 1st: eTargets in target span -----");
+		for (DirectNode directNode:bishans){
+			int opinionStart = directNode.opinionStart;
+			int opinionEnd = directNode.opinionStart + directNode.opinionSpan.split(" ").length-1;
+			String conSpan = findConSpan(opinionStart, opinionEnd, root);
+			ArrayList<Tree> trees = new ArrayList<Tree>();
+			findTreeOfCon(conSpan, root, trees);
+			Tree tree = trees.get(0);
+			while (!tree.equals(root)&& !tree.label().value().toString().equals("VP") && !tree.label().value().toString().equals("NP")){
+				tree = tree.parent(root);
+				//System.out.println(tree.pennString());
+			}
+			findHeadInATree(tree, directNode.eTargets);
+			
+			for (int i=0;i<directNode.targets.size();i++){
+				int targetStart = directNode.targetStarts.get(i);
+				int targetEnd = targetStart + directNode.targets.get(i).split(" ").length-1;
+				String targetConSpan = findConSpan(targetStart, targetEnd, root);
+				ArrayList<Tree> targetTrees = new ArrayList<Tree>();
+				findTreeOfCon(targetConSpan, root, targetTrees);
+				Tree targetTree = targetTrees.get(0);
+				while (!targetTree.equals(root)&& !targetTree.label().value().toString().equals("VP") && !targetTree.label().value().toString().equals("NP")){
+					targetTree = targetTree.parent(root);
+					//System.out.println(tree.pennString());
+				}
+				findHeadInATree(targetTree, directNode.eTargets);
+				
+			}
+			
+			findMoreByStanford(directNode);
+			
+			System.out.println(directNode.eTargets);
+		}  // each direct node
+		
+		return;
+		
 	}
 	
 	private void findMoreByStanford(DirectNode direct){
@@ -274,7 +327,8 @@ public class ASentence {
 		// find the subtree corresponding to the constituent
 		Tree sentiTreeRoot = this.sentenceSyntax.get(AnnotatedTree.class);
 		ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
-		String conSpan = findConSpan(subjStart, subjEnd, sentiTreeRoot);
+		
+		String conSpan = findConSpan(subjStart, subjEnd, this.sentenceSyntax.get(TreeAnnotation.class));
 		findTreeOfCon(conSpan, sentiTreeRoot, treesOfCon);
 		
 		Queue<Tree> queue = new LinkedList<Tree>();
@@ -286,7 +340,7 @@ public class ASentence {
 				int polarityNumStanford = RNNCoreAnnotations.getPredictedClass(subTree);
 				if ( (direct.polarity.startsWith("pos") && polarityNumStanford>2) 
 						|| (direct.polarity.startsWith("neg") && polarityNumStanford<2) )
-				direct.eTargets.addAll(subTree.getLeaves());
+					direct.eTargets.addAll(subTree.getLeaves());
 				// put children in the queue
 				for (Tree child:subTree.getChildrenAsList()){
 					queue.offer(child);
@@ -301,10 +355,15 @@ public class ASentence {
 		if (directNode.targets.isEmpty()){
 			ArrayList<Tree> headsInSubjSpan =  findAllHeadsInSubjSpan(directNode, root);
 			
+			directNode.eTargets.addAll(findETargetMyselfByCon(directNode,root));
+			
+			
 			for (Tree head:headsInSubjSpan){
 				int indexOfLeaf = root.getLeaves().indexOf(head)+1;
-				directNode.eTargets.addAll(findETargetMyself(indexOfLeaf,headsInSubjSpan));
+				directNode.eTargets.addAll(findETargetMyselfByDep(indexOfLeaf,headsInSubjSpan));
+				
 			}
+			
 		}
 		
 		else{
@@ -378,13 +437,12 @@ public class ASentence {
 			}
 		}  // each constituent
 		
-		
 		String conSpan = tmp.get(0).toSentenceString(wordsTmp);
 		
 		return conSpan;
 	}
 	
-	private ArrayList<Tree> findETargetMyself(int indexOfLeaf, ArrayList<Tree> headsInSubjSpan) throws IOException{
+	private ArrayList<Tree> findETargetMyselfByDep(int indexOfLeaf, ArrayList<Tree> headsInSubjSpan) throws IOException{
 		ArrayList<Tree> eTargets = new ArrayList<Tree>();
 		ArrayList<Tree> leaves = (ArrayList<Tree>) this.sentenceSyntax.get(TreeAnnotation.class).getLeaves();
 		
@@ -393,19 +451,84 @@ public class ASentence {
 				continue;
 			
 			String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
-			if (Rule.targetRulesJudgeGov(td, indexOfLeaf, govWord) && !headsInSubjSpan.contains(leaves.get(td.gov().index()-1)) )
+			//if (Rule.targetRulesJudgeGov(td, indexOfLeaf, govWord) && !headsInSubjSpan.contains(leaves.get(td.gov().index()-1)) ){
+			if (Rule.targetRulesJudgeGov(td, indexOfLeaf, govWord)  ){
+				//Tree leaf = leaves.get(td.gov().index()-1);
+				//System.out.println(leaf.parent().label().value());
+				//if ( judgeHead(leaf.parent()) )
 				eTargets.add(leaves.get(td.gov().index()-1));
-			if (Rule.targetRulesJudgeDep(td, indexOfLeaf, govWord)  &&  !headsInSubjSpan.contains(leaves.get(td.dep().index()-1)) )
+			}
+			if (Rule.targetRulesJudgeDep(td, indexOfLeaf, govWord)  ){
+				//Tree leaf = leaves.get(td.dep().index()-1);
+				//System.out.println(leaf.parent().label().value());
+				//if ( judgeHead(leaf.parent()) )
 				eTargets.add(leaves.get(td.dep().index()-1));
+			}
 		}
 		
 		return eTargets;
 	}
 	
+	private ArrayList<Tree> findETargetMyselfByCon(DirectNode direct, Tree root) throws IOException{
+		ArrayList<Tree> eTargets = new ArrayList<Tree>();
+		
+		int opinionStart = direct.opinionStart;
+		int opinionEnd = opinionStart + direct.opinionSpan.split(" ").length-1;
+		String conSpan = findConSpan(opinionStart, opinionEnd, root);
+		ArrayList<Tree> treesOfCon = new ArrayList<Tree>();
+		findTreeOfCon(conSpan, root, treesOfCon);
+		Tree tree = treesOfCon.get(0);
+		
+		// the subj span is an NP
+		if (tree.label().value().startsWith("NP")){
+			findHeadInATree(tree, eTargets);
+		}
+		
+		// the subj span is a VP
+		else if (tree.label().value().startsWith("VP")){
+			// deal with siblings
+			ArrayList<Tree> siblings = (ArrayList<Tree>) tree.siblings(root);
+			for (Tree sibling:siblings){
+				if (sibling.label().value().startsWith("S") || sibling.label().value().startsWith("NP")){
+					findHeadInATree(sibling, eTargets);
+				}
+			}
+			// NP in the VP
+			
+			
+		}
+		
+		else if (tree.label().value().startsWith("ADJ")){
+			ArrayList<Tree> headsInSubjSpan =  findAllHeadsInSubjSpan(direct, root);
+			for (Tree head:headsInSubjSpan){
+				int indexOfLeaf = root.getLeaves().indexOf(head)+1;
+				eTargets.addAll(findETargetMyselfByDep(indexOfLeaf,headsInSubjSpan));
+				
+				for (TypedDependency td:this.tdl){
+					if (td.gov().index() == 0)
+						continue;
+					
+					String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
+					//if (Rule.targetRulesJudgeGov(td, indexOfLeaf, govWord) && !headsInSubjSpan.contains(leaves.get(td.gov().index()-1)) ){
+					if (Rule.targetRulesJudgeGovNounOfAdj(td, indexOfLeaf, govWord)  ){
+						eTargets.add(root.getLeaves().get(td.gov().index()-1));
+					}
+					if (Rule.targetRulesJudgeDepNounOfAdj(td, indexOfLeaf, govWord)  ){
+						eTargets.add(root.getLeaves().get(td.dep().index()-1));
+					}
+				}  // dependency
+			}  // each head in subj span
+		}  // adj
+		
+		return eTargets;
+		
+		
+	}
+	
 	private void findHeadInATree(Tree root, ArrayList<Tree> heads){
 		// if the current node is the parent node of a particular token, and it is either noun (NN) or verb (VB), or prounoun (PRP)
 		// print it
-		if (root.isPreTerminal() && (root.label().value().startsWith("NN") || root.label().value().startsWith("VB") || root.label().value().equals("PRP") ) ){
+		if (root.isPreTerminal() && judgeHead(root) ){
 			heads.add(root.children()[0]);
 		}
 		
@@ -415,6 +538,14 @@ public class ASentence {
 		}
 		
 		return;
+	}
+	
+	private boolean judgeHead(Tree root){
+		if (root.isPreTerminal() && (root.label().value().startsWith("NN") || root.label().value().startsWith("VB") || root.label().value().equals("PRP") ) ){
+			return true;
+		}
+		
+		return false;
 	}
 	
 	private void printTree(Tree root, Constituent con){

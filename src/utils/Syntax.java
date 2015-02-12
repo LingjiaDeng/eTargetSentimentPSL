@@ -36,6 +36,7 @@ import edu.stanford.nlp.util.CoreMap;
 
 public class Syntax {
 	public static StanfordCoreNLP pipeline;
+	private static Properties props;
 	//public CoreMap sentenceCoreMap;
 	//public Map<Integer, CorefChain> corefHash;
 	//public List<CoreMap> sentences;
@@ -44,10 +45,11 @@ public class Syntax {
 	private static TreebankLanguagePack tlp;
 	private static GrammaticalStructureFactory gsf;
 	
+	public static int multiSentenceNum; 
+	
 	public Syntax(){
-		Properties props = new Properties();
-		
-	    props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, sentiment, dcoref");
+		this.props = new Properties();
+	    this.props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, sentiment, dcoref");
 		
 	    this.pipeline = new StanfordCoreNLP(props);
 	    this.tlp = new PennTreebankLanguagePack();
@@ -88,16 +90,26 @@ public class Syntax {
 	}
 	
 	public void parseSentence(ASentence sentence){
-		String span = sentence.sentenceString;
+		String span = sentence.sentenceTokenizedString;
         Annotation document = new Annotation(span);
         this.pipeline.annotate(document);
         
         // syntax
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+        //System.out.println(span);
+        //System.out.println(sentences.size());
+        if (sentences.size()>1){
+        	sentence.multiSentenceFlag = true;
+        	this.multiSentenceNum++;
+        }
+        
+        if (sentence.multiSentenceFlag)
+        	return;
+        
         sentence.sentenceSyntax = sentences.get(0);
         // add dependency parser
         GrammaticalStructure gs = this.gsf.newGrammaticalStructure(sentence.sentenceSyntax.get(TreeAnnotation.class));
-        sentence.tdl = gs.typedDependencies();
+        sentence.tdl = gs.typedDependenciesCollapsed();
         
         // translate the co-references from stanford parser into my representation
         Map<Integer, CorefChain> corefHash = document.get(CorefChainAnnotation.class);
@@ -109,7 +121,9 @@ public class Syntax {
         	ArrayList<Tree> cmLeaves = new ArrayList<Tree>();
         	for (CorefMention cm:chain.getMentionsInTextualOrder()){
         		int index = cm.startIndex;
-        		Tree cmLeaf = sentence.sentenceSyntax.get(TreeAnnotation.class).getLeaves().get(index);
+        		//System.out.println(cm.startIndex+cm.toString());
+        		//System.out.println(sentence.sentenceSyntax.get(TreeAnnotation.class).getLeaves());
+        		Tree cmLeaf = sentence.sentenceSyntax.get(TreeAnnotation.class).getLeaves().get(index-1);
         		cmLeaves.add(cmLeaf);
         	}
         	

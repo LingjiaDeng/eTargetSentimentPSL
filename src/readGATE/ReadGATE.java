@@ -73,24 +73,24 @@ public class ReadGATE {
 	
 	public ArrayList<ASentence> addBishanResults(HashMap<Integer,ArrayList<DirectNode>> bishans,ArrayList<ASentence> sentences) throws GateException{
 		this.bishanSentenceHash = bishans;
-		return addBishanResults(sentences);
-	}
-	
-	private ArrayList<ASentence> addBishanResults(ArrayList<ASentence> sentences){
+		
 		for (Integer sentenceIndex:this.sentenceHash.keySet()){
 			ASentence aSentence = this.sentenceHash.get(sentenceIndex);
+			
 			if (this.bishanSentenceHash.containsKey(sentenceIndex)){
 				aSentence.bishanDirects = this.bishanSentenceHash.get(sentenceIndex);
 				aSentence.sentenceTokenizedString = aSentence.bishanDirects.get(0).sentence;
 				if (aSentence.bishanDirects.get(0).opinionStart == -1)
 					aSentence.bishanDirects = new ArrayList<DirectNode>();
 			}
+			
 			sentences.add(aSentence);
 		}
 		
 		return sentences;
 	}
 	
+	/*
 	public void alignSentenceWithStanfordSyntax(List<CoreMap> sentencesSytax){
 		for (Integer sentenceIndex:this.sentenceHash.keySet()){
 			ASentence aSentence = this.sentenceHash.get(sentenceIndex);
@@ -101,6 +101,7 @@ public class ReadGATE {
 		
 		return;
 	}
+	*/
 	
 	private void readGATE() throws GateException{
 		DocumentContent content = this.doc.getContent();

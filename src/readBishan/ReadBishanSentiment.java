@@ -39,7 +39,7 @@ public class ReadBishanSentiment {
 		ArrayList<String> opinions = new ArrayList<String>();
 		ArrayList<Integer> opinionStarts = new ArrayList<Integer>();
 		ArrayList<String> polarities = new ArrayList<String>();
-		boolean flagNewOpinion = false;
+		boolean flagNewOpinion = true;
 		int tokenIndex = -1;
 		int sentenceIndex = -1;
 		
