@@ -33,10 +33,10 @@ public class Doc {
 	private static Syntax parse;
 	//private List<CoreMap> sentencesSyntax;
 	
-	public ArrayList<String> unigramCon;
-	public ArrayList<String> bigramCon;
-	public ArrayList<String> unigramDep;
-	public ArrayList<String> bigramDep;
+	public HashSet<String> unigramCon;
+	public HashSet<String> bigramCon;
+	public HashSet<String> unigramDep;
+	public HashSet<String> bigramDep;
 	
 	public Doc(String docId) throws IOException, GateException{
 		this.docId = docId;
@@ -45,6 +45,11 @@ public class Doc {
 		this.autoNum = 0;
 		this.corretNum = 0;
 		this.parse = new Syntax();
+		
+		this.unigramCon = new HashSet<String>();
+		this.bigramCon = new HashSet<String>();
+		this.unigramDep = new HashSet<String>();
+		this.bigramDep = new HashSet<String>();
 	}
 	
 	public void parseAsAWholeDoc() throws IOException{
@@ -132,12 +137,13 @@ public class Doc {
 						continue;
 					for (int i=0;i<path.size();i++){
 						Tree treeOnPath = path.get(i);
-						if ( !unigramCon.contains(treeOnPath.label().value()) )
-							unigramCon.add(treeOnPath.label().value());
+						directNode.unigramCon.add(treeOnPath.label().value());
+						this.unigramCon.add(treeOnPath.label().value());
 						if (i==0)
 							continue;
 						
-						bigramCon.add(path.get(i-1).label().value()+"/"+treeOnPath.label().value());
+						directNode.bigram.add(path.get(i-1).label().value()+"/"+treeOnPath.label().value());
+						this.bigramCon.add(path.get(i-1).label().value()+"/"+treeOnPath.label().value());
 					}
 					
 					// calculate the counts on dependency parser
@@ -147,11 +153,14 @@ public class Doc {
 					
 					List<SemanticGraphEdge> path = depGraph.getShortestUndirectedPathEdges(targetWord, opinionWord);
 		        		for (int i=0;i<path.size();i++){
-		        			unigramDep.add(path.get(i).getRelation().getLongName());
+		        			directNode.unigramDep.add(path.get(i).getRelation().getLongName());
+		        			this.unigramDep.add(path.get(i).getRelation().getLongName());
 		        			if (i==0)
 		        				continue;
 		        			
-		        			bigramDep.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
+		        			directNode.bigramDep.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
+		        			this.bigramDep.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
+		        			
 		        		}
 					
 				}  // each target
