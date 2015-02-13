@@ -172,7 +172,10 @@ public class Doc {
 					continue;
 				
 				
-				directNode.analyzeFeatures();
+				directNode.countItself();
+				directNode.countCon(this.unigramCon, this.bigramCon);
+				directNode.countDep(this.unigramDep, this.bigramDep);
+				directNode.countGFBF();
 				
 			}
 		}
