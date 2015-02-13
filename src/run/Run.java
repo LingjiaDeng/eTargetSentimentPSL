@@ -41,13 +41,14 @@ public class Run {
 		while ( (docId=br.readLine())!= null ){
 			index++;
 			
-			if (index == 58 )
-				continue;
+			if (index > 0 )
+				break;
 			System.out.println("............"+index+"............."+docId);
 			Doc doc = new Doc(docId);
 			doc.read();
 			doc.parse();
 			doc.generateETarget();
+			doc.generateFeatures();
 			
 			doc.statistics();
 			

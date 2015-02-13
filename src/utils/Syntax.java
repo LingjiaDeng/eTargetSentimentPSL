@@ -107,6 +107,7 @@ public class Syntax {
         	return;
         
         sentence.sentenceSyntax = sentences.get(0);
+        sentence.root = sentence.sentenceSyntax.get(TreeAnnotation.class);
         // add dependency parser
         GrammaticalStructure gs = this.gsf.newGrammaticalStructure(sentence.sentenceSyntax.get(TreeAnnotation.class));
         sentence.tdl = gs.typedDependenciesCollapsed();

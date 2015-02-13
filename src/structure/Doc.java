@@ -88,30 +88,50 @@ public class Doc {
 			if (aSentence.multiSentenceFlag)
 				continue;
 			
+			if (aSentence.sentenceSyntax == null)
+				parse();
+			
+			aSentence.preprocessing();
+			
 			System.out.println("=====  sentence ======");
 			System.out.println(aSentence.sentenceTokenizedString);
 			aSentence.alignGoldStandard();
-			//aSentence.findETarget();
-			aSentence.extractAllETargetsInCon();
-			
-			
-			
-			
-			//aSentence.expandETargetUsingGFBF();
+			aSentence.addETarget();
+			aSentence.addMoreByStanford();
+			aSentence.addMoreByGFBF();
 			aSentence.lastFiltering();
 		}  // each aSentence
 	}
 	
-	public void statistics(){
+	public void generateFeatures() throws IOException, GateException{
 		for (ASentence aSentence:this.sentences){
-			for (DirectNode direct:aSentence.bishanDirects){
-				if (direct.eTargetsGS.isEmpty() || direct.eTargetsGS.size() == 0)
+			if (aSentence.multiSentenceFlag)
+				continue;
+			
+			if (aSentence.sentenceSyntax == null)
+				parse();
+			
+			for (DirectNode directNode:aSentence.bishanDirects){
+				if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
 					continue;
 				
-				this.gsNum += direct.eTargetsGS.size();
-				this.autoNum += direct.eTargets.size();
-				for (Tree eTarget:direct.eTargetsGS){
-					if (direct.eTargets.contains(eTarget))
+				
+				directNode.analyzeFeatures();
+				
+			}
+		}
+	}
+	
+	public void statistics(){
+		for (ASentence aSentence:this.sentences){
+			for (DirectNode directNode:aSentence.bishanDirects){
+				if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
+					continue;
+				
+				this.gsNum += directNode.eTargetsGS.size();
+				this.autoNum += directNode.eTargets.size();
+				for (Tree eTarget:directNode.eTargetsGS){
+					if (directNode.eTargets.contains(eTarget))
 						this.corretNum += 1;
 				}
 			}
