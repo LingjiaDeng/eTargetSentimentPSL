@@ -103,6 +103,43 @@ public class Doc {
 		}  // each aSentence
 	}
 	
+	public void countFeatureNGram(){
+		for (ASentence aSentence:this.sentences){
+			if (aSentence.multiSentenceFlag)
+				continue;
+			
+			if (aSentence.sentenceSyntax == null)
+				parse();
+			
+			Collection<TypedDependency> tdl = aSentence.tdl;
+			
+			for (DirectNode directNode:aSentence.bishanDirects){
+				Tree root = directNode.root;
+				if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
+					continue;
+				
+				for (Tree target:directNode.targets){
+					// calculate the counts on constituency parser
+					// find the list of path
+					ArrayList<Tree> path = root.pathToNode(directNode.opinionTree, target);
+					if (path.isEmpty()|| path.size()==0)
+						continue;
+					for (int i=0;i<path.size();i++){
+						Tree treeOnPath = path.get(i);
+						if ( !unigramCon.contains(treeOnPath.label().value()) )
+							unigramCon.add(treeOnPath.label().value());
+						if (i==0)
+							continue;
+						
+						bigramCon.add(path.get(i-1).label().value()+"/"+treeOnPath.label().value());
+					}
+					
+					// calculate the counts on dependency parser
+				}
+			}
+		}
+	}
+	
 	public void generateFeatures() throws IOException, GateException{
 		for (ASentence aSentence:this.sentences){
 			if (aSentence.multiSentenceFlag)
