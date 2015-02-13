@@ -6,6 +6,10 @@ public class Feature {
 	public int deptOfParent;
 	public int lengthOfDep;
 	public int containsSthInDep;
+	public int[] unigramCon;
+	public int[] bigramCon;
+	public int[] unigramDep;
+	public int[] bigramDep;
 	
 	
 	public Feature(){
@@ -14,6 +18,7 @@ public class Feature {
 		this.deptOfParent = 0;
 		this.lengthOfDep = 0;
 		this.containsSthInDep = 0;
+		
 	}
 
 }
