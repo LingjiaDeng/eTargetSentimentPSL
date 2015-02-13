@@ -33,6 +33,11 @@ public class Doc {
 	private static Syntax parse;
 	//private List<CoreMap> sentencesSyntax;
 	
+	public ArrayList<String> unigramCon;
+	public ArrayList<String> bigramCon;
+	public ArrayList<String> unigramDep;
+	public ArrayList<String> bigramDep;
+	
 	public Doc(String docId) throws IOException, GateException{
 		this.docId = docId;
 		this.sentences = new ArrayList<ASentence>();
@@ -111,7 +116,8 @@ public class Doc {
 			if (aSentence.sentenceSyntax == null)
 				parse();
 			
-			Collection<TypedDependency> tdl = aSentence.tdl;
+			SemanticGraph depGraph = coreMap.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+        		Set<IndexedWord> words = depGraph.getLeafVertices();
 			
 			for (DirectNode directNode:aSentence.bishanDirects){
 				Tree root = directNode.root;
@@ -135,9 +141,22 @@ public class Doc {
 					}
 					
 					// calculate the counts on dependency parser
-				}
-			}
-		}
+					int indexOfTarget = root.getLeaves().indexOf(target);
+					IndexedWord targetWord = words.get(indexOfTarget);
+					IndexedWord opinionWord = words.get(directNode.opinionStart);
+					
+					List<SemanticGraphEdge> path = depGraph.getShortestUndirectedPathEdges(targetWord, opinionWord);
+		        		for (int i=0;i<path.size();i++){
+		        			unigramDep.add(path.get(i).getRelation().getLongName());
+		        			if (i==0)
+		        				continue;
+		        			
+		        			bigramDep.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
+		        		}
+					
+				}  // each target
+			}  // each direct node
+		} // each sentence
 	}
 	
 	public void generateFeatures() throws IOException, GateException{
