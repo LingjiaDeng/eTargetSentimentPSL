@@ -130,20 +130,22 @@ public class Doc {
 					continue;
 				
 				for (Tree target:directNode.targets){
+					int targetIndex = directNode.targets.indexOf(target);
 					// calculate the counts on constituency parser
 					// find the list of path
 					ArrayList<Tree> path = root.pathToNode(directNode.opinionTree, target);
 					if (path.isEmpty()|| path.size()==0)
 						continue;
+					directNode.features.get(targetIndex).lengthOnConTree = path.size();
 					for (int i=0;i<path.size();i++){
 						Tree treeOnPath = path.get(i);
-						HashSet<String> tmp = directNode.features.get(i).unigramCon;
+						HashSet<String> tmp = directNode.features.get(targetIndex).unigramCon;
 						tmp.add(treeOnPath.label().value());
 						this.unigramCon.add(treeOnPath.label().value());
 						if (i==0)
 							continue;
 						
-						tmp = directNode.features.get(i).bigramCon;
+						tmp = directNode.features.get(targetIndex).bigramCon;
 						tmp.add(path.get(i-1).label().value()+"-"+treeOnPath.label().value());
 						this.bigramCon.add(path.get(i-1).label().value()+"-"+treeOnPath.label().value());
 					}
@@ -154,15 +156,16 @@ public class Doc {
 					IndexedWord opinionWord = words.get(directNode.opinionStart);
 					
 					List<SemanticGraphEdge> path = depGraph.getShortestUndirectedPathEdges(targetWord, opinionWord);
+		        		directNode.features.get(i).lengthOnDep = path.size();
 		        		for (int i=0;i<path.size();i++){
-		        			HashSet<String> tmp = directNode.features.get(i).unigramDep;
+		        			HashSet<String> tmp = directNode.features.get(targetIndex).unigramDep;
 						tmp.add(path.get(i).getRelation().getLongName());
 		        			this.unigramDep.add(path.get(i).getRelation().getLongName());
 		        			if (i==0)
 		        				continue;
 		        				
-		        			tmp = directNode.features.get(i).unigramCon;
-						tmp.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
+		        			tmp = directNode.features.get(targetIndex).unigramCon;
+						tmp.add(path.get(i-1).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
 		        			this.bigramDep.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
 		        			
 		        		}
