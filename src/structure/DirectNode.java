@@ -1,6 +1,7 @@
 package structure;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import edu.stanford.nlp.trees.Tree;
 
@@ -41,14 +42,11 @@ public class DirectNode {
 	  this.eTargets = new ArrayList<Tree>();
 	  this.eTargetsGS = new ArrayList<Tree>();
 	  
-	  this.unigramCon = new HashSet<String>();
-	  this.bigramCon = new HashSet<String>();
-	  this.unigramDep = new HashSet<String>();
-	  this.bigramDep = new HashSet<String>();
+	  this.features = new ArrayList<Feature>();
 	}
 	
-	public void countItself(){
-		for (int t=0;t<this.eTargets;t++){
+	public void countFeatures(HashSet<String> unigramCon, HashSet<String> bigramCon, HashSet<String> unigramDep, HashSet<String> bigramDep){
+		for (int t=0;t<this.eTargets.size();t++){
 			Tree eTarget = eTargets.get(t);
 			Feature feature = new Feature();
 			this.features.add(feature);
@@ -65,47 +63,48 @@ public class DirectNode {
 			}
 			
 			// constituency
-			feature.unigramCount = new int[unigramCon.size()];
-			feature.bigramCount = new int[bigramCon.size()];
+			feature.unigramConCount = new int[unigramCon.size()];
+			feature.bigramConCount = new int[bigramCon.size()];
 			
 			
 			for (int i=0;i<unigramCon.size();i++){
-				if (feature.unigramCon.contains(unigramCon.get(i)))
-					feature.unigramCount[i] = 1;
+				if (feature.unigramCon.contains(unigramCon.toArray()[i]))
+					feature.unigramConCount[i] = 1;
 				else
-					feature.unigramCount[i] = 0;
+					feature.unigramConCount[i] = 0;
 			}
 			
 			for (int i=0;i<bigramCon.size();i++){
-				if (feature.bigramCon.contains(bigramCon.get(i)))
-					feature.bigramCount[i] = 1;
+				if (feature.bigramCon.contains(bigramCon.toArray()[i]))
+					feature.bigramConCount[i] = 1;
 				else
-					feature.bigramCount[i] = 0;
+					feature.bigramConCount[i] = 0;
 			}
 			
 			//feature.unigramCon = unigramCount;
 			//feature.bigramCount = bigramCount;
 			
 			// dependency parser
-			unigramCount = new int[unigramDep.size()];
-			bigramCount = new int[bigramDep.size()];
+			feature.unigramDepCount = new int[unigramDep.size()];
+			feature.bigramDepCount = new int[bigramDep.size()];
 			
 			for (int i=0;i<unigramDep.size();i++){
-				if (feature.unigramDep.contains(unigramDep.get(i)))
-					unigramCount[i] = 1;
+				if (feature.unigramDep.contains(unigramDep.toArray()[i]))
+					feature.unigramDepCount[i] = 1;
 				else
-					unigramCount[i] = 0;
+					feature.unigramDepCount[i] = 0;
 			}
 			
 			for (int i=0;i<bigramDep.size();i++){
-				if (feature.bigramDep.contains(bigramDep.get(i)))
-					bigramCount[i] = 1;
+				if (feature.bigramDep.contains(bigramDep.toArray()[i]))
+					feature.bigramDepCount[i] = 1;
 				else
-					bigramCount[i] = 0;
+					feature.bigramDepCount[i] = 0;
 			}
 			
-			feature.unigramDep = unigramCount;
-			feature.bigramDep = bigramCount;
+			//feature.unigramDep = unigramCount;
+			//feature.bigramDep = bigramCount;
+		}
 	}
 
 }

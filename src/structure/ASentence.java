@@ -233,7 +233,8 @@ public class ASentence {
 			System.out.println(directNode.opinionSpan);
 			System.out.println(directNode.targets);
 			
-			Tree tree = directNode.opinionTree.deepCopy();
+			//Tree tree = directNode.opinionTree.deepCopy();
+			Tree tree = directNode.opinionTree;
 			while (!tree.equals(root)&& !tree.label().value().toString().equals("VP") && !tree.label().value().toString().equals("NP")){
 				tree = tree.parent(root);
 				//System.out.println(tree.pennString());
@@ -241,7 +242,8 @@ public class ASentence {
 			addHeadInATree(tree, directNode.eTargets);
 			
 			for (int i=0;i<directNode.targets.size();i++){
-				Tree targetTree = directNode.targetTrees.get(i).deepCopy();
+				//Tree targetTree = directNode.targetTrees.get(i).deepCopy();
+				Tree targetTree = directNode.targetTrees.get(i);
 				while (!targetTree.equals(root)&& !targetTree.label().value().toString().equals("VP") && !targetTree.label().value().toString().equals("NP")){
 					targetTree = targetTree.parent(root);
 					//System.out.println(tree.pennString());

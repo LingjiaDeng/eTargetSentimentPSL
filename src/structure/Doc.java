@@ -2,7 +2,11 @@ package structure;
 
 import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetBeginAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetEndAnnotation;
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations.AnnotatedTree;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
@@ -15,7 +19,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import readBishan.ReadBishanTogether;
 import readGATE.ReadGATE;
@@ -113,7 +119,14 @@ public class Doc {
 		}  // each aSentence
 	}
 	
-	public void countFeatureNGram(){
+	private void initializeFeature(DirectNode directNode){
+		for (Tree eTarget:directNode.eTargets)
+			directNode.features.add(new Feature());
+		
+		return;
+	}
+	
+	public void countFeatureNGram() throws IOException, GateException{
 		for (ASentence aSentence:this.sentences){
 			if (aSentence.multiSentenceFlag)
 				continue;
@@ -121,54 +134,66 @@ public class Doc {
 			if (aSentence.sentenceSyntax == null)
 				parse();
 			
-			SemanticGraph depGraph = coreMap.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
-        		Set<IndexedWord> words = depGraph.getLeafVertices();
+			SemanticGraph depGraph = aSentence.sentenceSyntax.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
+        	Set<IndexedWord> words = depGraph.vertexSet();
 			
 			for (DirectNode directNode:aSentence.bishanDirects){
+				if (directNode.features.isEmpty() || directNode.features.size() == 0)
+					initializeFeature(directNode);
+				
 				Tree root = directNode.root;
 				if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
 					continue;
 				
-				for (Tree target:directNode.targets){
-					int targetIndex = directNode.targets.indexOf(target);
+				for (Tree eTarget:directNode.eTargets){
+					int targetIndex = directNode.eTargets.indexOf(eTarget);
+					
 					// calculate the counts on constituency parser
-					// find the list of path
-					ArrayList<Tree> path = root.pathToNode(directNode.opinionTree, target);
-					if (path.isEmpty()|| path.size()==0)
-						continue;
-					directNode.features.get(targetIndex).lengthOnConTree = path.size();
-					for (int i=0;i<path.size();i++){
-						Tree treeOnPath = path.get(i);
-						HashSet<String> tmp = directNode.features.get(targetIndex).unigramCon;
-						tmp.add(treeOnPath.label().value());
-						this.unigramCon.add(treeOnPath.label().value());
-						if (i==0)
-							continue;
-						
-						tmp = directNode.features.get(targetIndex).bigramCon;
-						tmp.add(path.get(i-1).label().value()+"-"+treeOnPath.label().value());
-						this.bigramCon.add(path.get(i-1).label().value()+"-"+treeOnPath.label().value());
+					List<Tree> pathCon = root.pathNodeToNode(directNode.opinionTree, eTarget);
+					if (!pathCon.isEmpty() && pathCon.size()!=0){
+						directNode.features.get(targetIndex).lengthOnConTree = pathCon.size();
+						for (int i=0;i<pathCon.size();i++){
+							Tree treeOnPath = pathCon.get(i);
+							HashSet<String> tmp = directNode.features.get(targetIndex).unigramCon;
+							tmp.add(treeOnPath.label().value());
+							this.unigramCon.add(treeOnPath.label().value());
+							if (i==0)
+								continue;
+							
+							tmp = directNode.features.get(targetIndex).bigramCon;
+							tmp.add(pathCon.get(i-1).label().value()+"-"+treeOnPath.label().value());
+							this.bigramCon.add(pathCon.get(i-1).label().value()+"-"+treeOnPath.label().value());
+						}
 					}
 					
 					// calculate the counts on dependency parser
-					int indexOfTarget = root.getLeaves().indexOf(target);
-					IndexedWord targetWord = words.get(indexOfTarget);
-					IndexedWord opinionWord = words.get(directNode.opinionStart);
+					int indexOfLeaf = root.getLeaves().indexOf(eTarget);
+					IndexedWord targetWord = null;
+					IndexedWord opinionWord = null;
+					for (int ig=0;ig<words.size();ig++){
+						IndexedWord word = (IndexedWord) words.toArray()[ig];
+						if (word.index()-1==indexOfLeaf)
+							targetWord = word;
+						if (word.index()-1==directNode.opinionStart)
+							opinionWord = word;
+					}
 					
-					List<SemanticGraphEdge> path = depGraph.getShortestUndirectedPathEdges(targetWord, opinionWord);
-		        		directNode.features.get(i).lengthOnDep = path.size();
-		        		for (int i=0;i<path.size();i++){
-		        			HashSet<String> tmp = directNode.features.get(targetIndex).unigramDep;
-						tmp.add(path.get(i).getRelation().getLongName());
-		        			this.unigramDep.add(path.get(i).getRelation().getLongName());
-		        			if (i==0)
-		        				continue;
-		        				
-		        			tmp = directNode.features.get(targetIndex).unigramCon;
-						tmp.add(path.get(i-1).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
-		        			this.bigramDep.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
-		        			
-		        		}
+					if (targetWord !=  null && opinionWord !=  null){
+						List<SemanticGraphEdge> pathDep = depGraph.getShortestUndirectedPathEdges(targetWord, opinionWord);
+			        	directNode.features.get(targetIndex).lengthOnDep = pathDep.size();
+			        	for (int i=0;i<pathDep.size();i++){
+			        		HashSet<String> tmp = directNode.features.get(targetIndex).unigramDep;
+							tmp.add(pathDep.get(i).getRelation().getShortName());
+			        		this.unigramDep.add(pathDep.get(i).getRelation().getShortName());
+			        		if (i==0)
+			        			continue;
+			        				
+			        		tmp = directNode.features.get(targetIndex).bigramDep;
+							tmp.add(pathDep.get(i-1).getRelation().getShortName()+"-"+pathDep.get(i).getRelation().getShortName());
+			        		this.bigramDep.add(pathDep.get(i).getRelation().getShortName()+"-"+pathDep.get(i).getRelation().getShortName());
+			        			
+			        	}
+					}
 					
 				}  // each target
 			}  // each direct node
@@ -176,6 +201,12 @@ public class Doc {
 	}
 	
 	public void generateFeatures() throws IOException, GateException{
+		if (this.unigramCon.isEmpty() || this.unigramCon.size() == 0 ||
+				this.bigramCon.isEmpty() || this.bigramCon.size() == 0 ||
+				this.unigramDep.isEmpty() || this.unigramDep.size() == 0 ||
+				this.bigramDep.isEmpty() || this.bigramDep.size() == 0)
+			countFeatureNGram();
+		
 		for (ASentence aSentence:this.sentences){
 			if (aSentence.multiSentenceFlag)
 				continue;
@@ -187,12 +218,15 @@ public class Doc {
 				if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
 					continue;
 				
+				directNode.countFeatures(this.unigramCon, this.bigramCon, this.unigramDep, this.bigramDep);
+				//directNode.countCon(this.unigramCon, this.bigramCon);
+				//directNode.countDep(this.unigramDep, this.bigramDep);
+				//directNode.countGFBF();
 				
-				directNode.countItself();
-				directNode.countCon(this.unigramCon, this.bigramCon);
-				directNode.countDep(this.unigramDep, this.bigramDep);
-				directNode.countGFBF();
-				
+				for (int i=0;i<directNode.eTargets.size();i++){
+					Feature f = directNode.features.get(i);
+					f.print();
+				}
 			}
 		}
 	}
