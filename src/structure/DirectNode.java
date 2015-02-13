@@ -23,6 +23,11 @@ public class DirectNode {
 	public ArrayList<Tree> eTargetsGS;
 	public Tree root;
 	
+	public HashSet<String> unigramCon;
+	public HashSet<String> bigramCon;
+	public HashSet<String> unigramDep;
+	public HashSet<String> bigramDep;
+	
 	
 	public DirectNode(){
 	  this.agent = "";
@@ -38,24 +43,69 @@ public class DirectNode {
 	  this.polarity = "";
 	  this.eTargets = new ArrayList<Tree>();
 	  this.eTargetsGS = new ArrayList<Tree>();
+	  
+	  this.unigramCon = new HashSet<String>();
+	  this.bigramCon = new HashSet<String>();
+	  this.unigramDep = new HashSet<String>();
+	  this.bigramDep = new HashSet<String>();
 	}
 	
-	public void analyzeFeatures(){
+	public void countItself(){
 		for (Tree eTarget:this.eTargets){
 			Feature feature = new Feature();
 			if (this.opinionTree.getLeaves().contains(eTarget)){
 				feature.inOpinionSpan = 1;
 			}
 			
-			System.out.println(this.opinionTree.nodeString());
-			System.out.println(eTarget.nodeString());
-			System.out.println(this.root.pathNodeToNode(this.opinionTree, eTarget).size());
-			for (Tree tmp:this.root.pathNodeToNode(this.opinionTree, eTarget)){
-				System.out.println(tmp.nodeString());
+			for (String target:this.targets){
+				if (target.contains(eTarget.nodeString()))
+					feature.inTargetSpan = 1;
 			}
-				
+		}
+	}
+	
+	public void countCon(ArrayList<String> unigramCon, ArrayList<String> bigramCon){
+		int[] unigramCount = new int[unigramCon.size()];
+		int[] bigramCount = new int[bigramCon.size()];
+		
+		for (int i=0;i<unigramCon.size();i++){
+			if (this.unigramCon.contains(unigramCon.get(i)))
+				unigramCount[i] = 1;
+			else
+				unigramCount[i] = 0;
 		}
 		
+		for (int i=0;i<bigramCon.size();i++){
+			if (this.bigramCon.contains(bigramCon.get(i)))
+				bigramCount[i] = 1;
+			else
+				bigramCount[i] = 0;
+		}
+		
+		feature.unigramCon = unigramCount;
+		feature.bigramCount = bigramCount;
+	}
+	
+	public void countDep(ArrayList<String> unigramDep, ArrayList<String> bigramDep){
+		int[] unigramCount = new int[unigramDep.size()];
+		int[] bigramCount = new int[bigramDep.size()];
+		
+		for (int i=0;i<unigramDep.size();i++){
+			if (this.unigramDep.contains(unigramDep.get(i)))
+				unigramCount[i] = 1;
+			else
+				unigramCount[i] = 0;
+		}
+		
+		for (int i=0;i<bigramDep.size();i++){
+			if (this.bigramDep.contains(bigramDep.get(i)))
+				bigramCount[i] = 1;
+			else
+				bigramCount[i] = 0;
+		}
+		
+		feature.unigramDep = unigramCount;
+		feature.bigramDep = bigramDep;
 	}
 
 }
