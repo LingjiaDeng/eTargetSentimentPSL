@@ -137,13 +137,15 @@ public class Doc {
 						continue;
 					for (int i=0;i<path.size();i++){
 						Tree treeOnPath = path.get(i);
-						directNode.unigramCon.add(treeOnPath.label().value());
+						HashSet<String> tmp = directNode.features.get(i).unigramCon;
+						tmp.add(treeOnPath.label().value());
 						this.unigramCon.add(treeOnPath.label().value());
 						if (i==0)
 							continue;
 						
-						directNode.bigram.add(path.get(i-1).label().value()+"/"+treeOnPath.label().value());
-						this.bigramCon.add(path.get(i-1).label().value()+"/"+treeOnPath.label().value());
+						tmp = directNode.features.get(i).bigramCon;
+						tmp.add(path.get(i-1).label().value()+"-"+treeOnPath.label().value());
+						this.bigramCon.add(path.get(i-1).label().value()+"-"+treeOnPath.label().value());
 					}
 					
 					// calculate the counts on dependency parser
@@ -153,12 +155,14 @@ public class Doc {
 					
 					List<SemanticGraphEdge> path = depGraph.getShortestUndirectedPathEdges(targetWord, opinionWord);
 		        		for (int i=0;i<path.size();i++){
-		        			directNode.unigramDep.add(path.get(i).getRelation().getLongName());
+		        			HashSet<String> tmp = directNode.features.get(i).unigramDep;
+						tmp.add(path.get(i).getRelation().getLongName());
 		        			this.unigramDep.add(path.get(i).getRelation().getLongName());
 		        			if (i==0)
 		        				continue;
-		        			
-		        			directNode.bigramDep.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
+		        				
+		        			tmp = directNode.features.get(i).unigramCon;
+						tmp.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
 		        			this.bigramDep.add(path.get(i).getRelation().getLongName()+"-"+path.get(i).getRelation().getLongName());
 		        			
 		        		}
