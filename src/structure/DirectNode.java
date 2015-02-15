@@ -145,6 +145,19 @@ public class DirectNode {
 			}
 			
 		}
+		
+		return;
+	}
+	
+	public void gatherPSLElements(){
+		// for triple
+		for (Triple triple:this.gfbfTriples){
+			
+		}
+		
+		// for this direct
+		
+		return;
 	}
 
 }
