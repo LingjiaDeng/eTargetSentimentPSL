@@ -6,6 +6,7 @@ public final class Path {
 	private static String docRoot = "/afs/cs.pitt.edu/projects/wiebe/opin/database/docs/";;
 	private static String gfbfLexiconFile = "/afs/cs.pitt.edu/usr0/lid29/Downloads/effectwordnet/EffectWordNet.tff";
 	private static String doclistFile = "/afs/cs.pitt.edu/usr0/lid29/Downloads/man_anns/doclist";
+	private static String featureRoot = "/afs/cs.pitt.edu/projects/wiebe/opin/database/auto_anns/";
 	
 	private Path(){
 	}
@@ -28,5 +29,9 @@ public final class Path {
 	
 	public static String getDoclistFile(){
 		return doclistFile;
+	}
+	
+	public static String getFeatureRoot(){
+		return featureRoot;
 	}
 }

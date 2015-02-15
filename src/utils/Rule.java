@@ -1,8 +1,12 @@
 package utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+
+import structure.Triple;
 
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
 
 public final class Rule {
@@ -54,6 +58,40 @@ public final class Rule {
 		
 		
 		return false;
+	}
+	
+	public static void makeItATriple(TypedDependency td, ArrayList<Tree> leaves, ArrayList<Triple> triples){
+		Tree govLeaf = leaves.get(td.gov().index()-1);
+		Tree depLeaf = leaves.get(td.dep().index()-1);
+		String relation = td.reln().toString();
+		
+		Triple govInList = Overlap.tripleListContains(govLeaf, triples);
+		Triple depInList = Overlap.tripleListContains(depLeaf, triples);
+		
+		if (relation.equals("nsubj")){
+			if (govInList != null){
+				govInList.agent = depLeaf;
+			}
+		}
+		else if (relation.equals("dobj")){
+			if (govInList != null){
+				govInList.theme = depLeaf;
+			}
+		}
+		else if (relation.equals("conj") || relation.equals("ccomp") || relation.equals("xcomp")){
+			if (govInList == null){
+				Triple newTriple = new Triple();
+				newTriple.gfbf = govLeaf;
+				triples.add(newTriple);
+			}
+			if (depInList == null){
+				Triple newTriple = new Triple();
+				newTriple.gfbf = depLeaf;
+				triples.add(newTriple);
+			}
+		}
+		
+		return;
 	}
 	
 	// if indexOfLeaf == dep, then judge gov

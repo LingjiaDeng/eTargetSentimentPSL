@@ -1,5 +1,11 @@
 package utils;
 
+import java.util.ArrayList;
+
+import structure.Triple;
+
+import edu.stanford.nlp.trees.Tree;
+
 public final class Overlap {
 	
 	private Overlap(){
@@ -31,6 +37,15 @@ public final class Overlap {
 			return true;
 		else
 			return false;
+	}
+	
+	public static Triple tripleListContains(Tree tree, ArrayList<Triple> triples){
+		for (Triple triple:triples){
+			if (triple.gfbf.equals(tree))
+				return triple;
+		}
+		
+		return null;
 	}
 
 }

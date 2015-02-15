@@ -31,6 +31,7 @@ import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefClusterAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
@@ -99,10 +100,8 @@ public class ASentence {
 			}
 			
 			direct.eTargets = Clean.removeDuplicate(direct.eTargets);   // remove duplicate
-			/*
-			Tree root = this.sentenceSyntax.get(TreeAnnotation.class);
-			direct.eTargets = Clean.removeNonHead(direct.eTargets, root);
-			*/
+			direct.eTargets = Clean.removeNonHead(direct.eTargets, this.root);
+			
 		}
 	}
 	
@@ -218,6 +217,14 @@ public class ASentence {
 		}
 		
 		return subjs;
+	}
+	
+	public void addAllHeadAsETarget(){
+		ArrayList<DirectNode> bishans = this.bishanDirects;
+		Tree root = this.sentenceSyntax.get(TreeAnnotation.class);
+		for (DirectNode directNode:bishans){
+			addHeadInATree(root, directNode.eTargets);
+		}
 	}
 	
 	// extract all eTargets in the constituents...the recall is high
@@ -474,7 +481,7 @@ public class ASentence {
 			System.out.println("<"+bishan.agent+">");
 			System.out.println(bishan.opinionSpan);
 			
-			bishan.eTargets = findMoreByGFBF(bishan.eTargets);
+			bishan.eTargets = findMoreByGFBF(bishan);
 			bishan.eTargets = Clean.removeDuplicate(bishan.eTargets);
 			
 			System.out.println(bishan.eTargets);
@@ -483,7 +490,9 @@ public class ASentence {
 		return;
 	}
 	
-	private ArrayList<Tree> findMoreByGFBF(ArrayList<Tree> eTargets) throws IOException{
+	private ArrayList<Tree> findMoreByGFBF(DirectNode directNode) throws IOException{
+		ArrayList<Tree> eTargets = directNode.eTargets;
+		
 		if (eTargets.isEmpty() || eTargets.size()==0)
 			return eTargets;
 		
@@ -499,6 +508,7 @@ public class ASentence {
 		
 		while (!queue.isEmpty()){
 			Tree newETarget = queue.poll();
+			
 			if (visited.contains(newETarget))
 				continue;
 			
@@ -512,10 +522,14 @@ public class ASentence {
 					continue;
 				
 				String govWord = this.sentenceSyntax.get(TokensAnnotation.class).get(td.gov().index()-1).lemma();
-				if (Rule.gfbfRulesJudgeGov(td, indexOfLeaf, govWord))
+				if (Rule.gfbfRulesJudgeGov(td, indexOfLeaf, govWord)){
 					queue.offer(leaves.get(td.gov().index()-1));
-				if (Rule.gfbfRulesJudgeDep(td, indexOfLeaf, govWord))
+					Rule.makeItATriple(td, leaves, directNode.gfbfTriples);
+				}
+				if (Rule.gfbfRulesJudgeDep(td, indexOfLeaf, govWord)){
 					queue.offer(leaves.get(td.dep().index()-1));
+					Rule.makeItATriple(td, leaves, directNode.gfbfTriples);
+				}
 			}
 		}   // while queue isn't empty
 		

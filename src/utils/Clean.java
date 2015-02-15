@@ -24,6 +24,9 @@ public class Clean {
 		ArrayList<Tree> newList = new ArrayList<Tree>();
 		
 		for (Tree tree:oldList){
+			if (tree.parent(root) == null || tree.parent(root).isEmpty() )
+				continue;
+			
 			if ( tree.parent(root).label().value().startsWith("NN") ||
 					tree.parent(root).label().value().startsWith("VB") ||
 					tree.parent(root).label().value().startsWith("PRP") )

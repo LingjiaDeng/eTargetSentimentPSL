@@ -18,6 +18,7 @@ import structure.Doc;
 import utils.GFBF;
 import utils.Path;
 import utils.Clean;
+import utils.Statistics;
 import utils.Syntax;
 
 public class Run {
@@ -25,8 +26,10 @@ public class Run {
 		int gsNum = 0;
 		int autoNum = 0;
 		int corretNum = 0;
+		ArrayList<Doc> docs = new ArrayList<Doc>();
 		GFBF gfbfLexicon = new GFBF();
 		Clean remove = new Clean();
+		Statistics statistics = new Statistics();
 		
 		Syntax parser = new Syntax();
 		parser.multiSentenceNum = 0;
@@ -41,14 +44,14 @@ public class Run {
 		while ( (docId=br.readLine())!= null ){
 			index++;
 			
-			if (index > 0 )
+			if (index > 0  )
 				break;
 			System.out.println("............"+index+"............."+docId);
 			Doc doc = new Doc(docId);
 			doc.read();
 			doc.parse();
 			doc.generateETarget();
-			doc.generateFeatures();
+			doc.countFeatures();
 			
 			doc.statistics();
 			
@@ -56,9 +59,23 @@ public class Run {
 			autoNum += doc.autoNum;
 			corretNum += doc.corretNum;
 			
+			docs.add(doc);
+			
 		}
 		//String docId = "20020206/20.31.05-16359";
 		//String docId = "temp_fbis/20.58.47-19000";
+		
+		br.close();
+		fr.close();
+		
+		
+		
+		for (Doc doc:docs){
+			//doc.generateFeatures();
+			//doc.writerFeatures();
+		}
+		
+		
 		
 		
 		
