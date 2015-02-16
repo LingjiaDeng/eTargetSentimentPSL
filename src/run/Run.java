@@ -69,10 +69,14 @@ public class Run {
 		fr.close();
 		
 		
-		
+		// print for SVM
 		for (Doc doc:docs){
 			//doc.generateFeatures();
-			//doc.writerFeatures();
+			doc.writerFeatures();
+		}
+		
+		for (Doc doc:docs){
+			doc.writeForPSL();
 		}
 		
 		

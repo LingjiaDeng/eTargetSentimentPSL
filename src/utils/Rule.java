@@ -70,12 +70,12 @@ public final class Rule {
 		
 		if (relation.equals("nsubj")){
 			if (govInList != null){
-				govInList.agent = depLeaf;
+				govInList.agent.add(depLeaf);
 			}
 		}
 		else if (relation.equals("dobj")){
 			if (govInList != null){
-				govInList.theme = depLeaf;
+				govInList.theme.add(depLeaf);
 			}
 		}
 		else if (relation.equals("conj") || relation.equals("ccomp") || relation.equals("xcomp")){
@@ -83,11 +83,19 @@ public final class Rule {
 				Triple newTriple = new Triple();
 				newTriple.gfbf = govLeaf;
 				triples.add(newTriple);
+				if (depInList != null){
+					newTriple.agent = depInList.agent;
+					newTriple.theme = depInList.theme;
+				}
 			}
 			if (depInList == null){
 				Triple newTriple = new Triple();
 				newTriple.gfbf = depLeaf;
 				triples.add(newTriple);
+				if (govInList != null){
+					newTriple.agent = govInList.agent;
+					newTriple.theme = govInList.theme;
+				}
 			}
 		}
 		

@@ -24,6 +24,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -324,6 +325,11 @@ public class Doc {
 		FileWriter fw = new FileWriter(f);
 		BufferedWriter bw = new BufferedWriter(fw);
 		
+		File tf = new File(Path.getFeatureRoot()+docId+"/"+"etargetsId.txt");
+		FileWriter tfw = new FileWriter(tf);
+		BufferedWriter tbw = new BufferedWriter(tfw);
+		
+		
 		if (Statistics.unigramCon.isEmpty() || Statistics.unigramCon.size() == 0 ||
 				Statistics.bigramCon.isEmpty() || Statistics.bigramCon.size() == 0 ||
 				Statistics.unigramDep.isEmpty() || Statistics.unigramDep.size() == 0 ||
@@ -348,6 +354,11 @@ public class Doc {
 					Feature feature = directNode.features.get(i);
 					//feature.print();
 					feature.write(bw);
+					Integer id = directNode.root.getLeaves().indexOf(directNode.eTargets.get(i));
+					tbw.write(String.valueOf(-1*directNode.opinionStart));
+					tbw.write("\t");
+					tbw.write(String.valueOf(id));
+					tbw.newLine();
 				}
 				
 			}
@@ -355,6 +366,9 @@ public class Doc {
 		
 		bw.close();
 		fw.close();
+		
+		tbw.close();
+		tfw.close();
 	}
 	
 	public void statistics(){
@@ -378,6 +392,112 @@ public class Doc {
 		System.out.println("recall: "+recall);
 		System.out.println("precision: "+precision);
 		System.out.println("F-measure:"+(2*recall*precision)/(recall+precision));
+	}
+	
+	public void writeForPSL(){
+		
+		HashSet<Integer> etargets = new HashSet<Integer>();
+		
+		HashMap<Integer, Double> gfs = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> bfs = new HashMap<Integer, Double>();
+		HashMap<Integer, HashMap<Integer, Double>> agents = new HashMap<Integer, HashMap<Integer, Double>>();
+		HashMap<Integer, HashMap<Integer, Double>> themes = new HashMap<Integer, HashMap<Integer, Double>>();
+		
+		HashMap<Integer, HashMap<Integer, Double>> sources = new HashMap<Integer, HashMap<Integer, Double>>();
+		HashMap<Integer, HashMap<Integer, Double>> targets = new HashMap<Integer, HashMap<Integer, Double>>();
+		
+		HashMap<Integer, Double> positives = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> negatives = new HashMap<Integer, Double>();
+		
+		/*
+		 * open the output file from SVM classifier
+		 */
+		
+		
+		
+		for (ASentence aSentence:this.sentences){
+			for (DirectNode directNode:aSentence.bishanDirects){
+				if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
+					continue;
+				
+				ArrayList<Feature> features = directNode.features;
+				
+				List<Tree> leaves = directNode.root.getLeaves();
+				etargets.add(-1*directNode.opinionStart);
+				for (int t=0;t<directNode.eTargets.size();t++){
+					Tree etarget = directNode.eTargets.get(t);
+					Feature feature = features.get(t);
+					
+					int eTargetIndex = leaves.indexOf(etarget);
+					etargets.add(eTargetIndex);
+					
+					// gfbf triples
+					if (feature.isGF != 0){
+						gfs.put(eTargetIndex, feature.isGF);
+					}
+					if (feature.isBF != 0){
+						bfs.put(eTargetIndex, feature.isBF);
+					}
+					
+					Triple triple = Overlap.tripleListContains(etarget, directNode.gfbfTriples);
+					if (triple != null){
+						// agents
+						for (Tree agentTree:triple.agent){
+							if ( agents.containsKey(eTargetIndex) ){
+								HashMap<Integer, Double> tmp = agents.get(eTargetIndex);
+								tmp.put(leaves.indexOf(agentTree), 1.0);
+							}
+							else{
+								HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+								tmp.put(leaves.indexOf(agentTree), 1.0);
+								agents.put(eTargetIndex, tmp);
+							}
+						}
+						// themes
+						for (Tree themeTree:triple.theme){
+							if ( themes.containsKey(eTargetIndex) ){
+								HashMap<Integer, Double> tmp = themes.get(eTargetIndex);
+								tmp.put(leaves.indexOf(themeTree), 1.0);
+							}
+							else{
+								HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+								tmp.put(leaves.indexOf(themeTree), 1.0);
+								themes.put(eTargetIndex, tmp);
+							}
+						}
+					}
+					
+					
+					// targets
+					if (targets.containsKey(directNode.opinionStart)){
+						HashMap<Integer, Double> tmp = targets.get(directNode.opinionStart);
+						tmp.put(eTargetIndex, 1.0);
+						targets.put(directNode.opinionStart, tmp);
+					}
+					else{
+						HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+						tmp.put(eTargetIndex, 1.0);
+						targets.put(directNode.opinionStart, tmp);
+					}
+					
+				}   // each etarget
+				
+				// source
+				etargets.add(directNode.agentStart);
+				HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+				tmp.put(directNode.agentStart, 1.0);
+				agents.put(directNode.opinionStart, tmp);
+			
+				// positive
+				if (directNode.polarity.equals("positive")){
+					positives.put(-1*directNode.opinionStart, 1.0);
+				}
+				if (directNode.polarity.equals("negative")){
+					negatives.put(-1*directNode.opinionStart, 1.0);
+				}
+			
+			}  // each direct node
+		}
 	}
 	
 	/*
