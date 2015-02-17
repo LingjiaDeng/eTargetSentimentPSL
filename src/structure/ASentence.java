@@ -1,5 +1,8 @@
 package structure;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,7 +25,10 @@ import gate.util.InvalidOffsetException;
 import utils.GFBF;
 import utils.Overlap;
 import utils.Clean;
+import utils.Path;
 import utils.Rule;
+import utils.Statistics;
+import utils.WTF;
 
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
@@ -45,6 +51,7 @@ import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 
 public class ASentence {
+	public String docId;
 	public String sentenceString;
 	public String sentenceTokenizedString;
 	public int sentenceIndex;
@@ -58,6 +65,7 @@ public class ASentence {
 	public boolean multiSentenceFlag;
 	
 	public ASentence(){
+		this.docId = "";
 		this.sentenceString = "";
 		this.sentenceTokenizedString = "";
 		this.sentenceIndex = -1;
@@ -66,11 +74,15 @@ public class ASentence {
 		this.multiSentenceFlag = false;
 	}
 	
-	
+	// add trees
 	public void preprocessing(){
 		Tree root = this.root;
+		if (!this.multiSentenceFlag)
+			Statistics.directNodeNum += this.bishanDirects.size();
+		
 		for (DirectNode directNode:this.bishanDirects){
 			directNode.root = root;
+			// find opinion tree
 			int opinionStart = directNode.opinionStart;
 			int opinionEnd = opinionStart + directNode.opinionSpan.split(" ").length-1;
 			String conSpan = findConSpan(opinionStart, opinionEnd, root);
@@ -79,6 +91,20 @@ public class ASentence {
 			Tree tree = trees.get(0);
 			directNode.opinionTree = tree;
 			
+			// find agent tree
+			if (directNode.agentStart != -1){
+				int agentStart = directNode.agentStart;
+				int agentEnd = agentStart + directNode.agent.split(" ").length-1;
+				conSpan = findConSpan(agentStart, agentEnd, root);
+				if (!conSpan.isEmpty() && conSpan.length() > 0){
+					trees = new ArrayList<Tree>(); 
+					findTreeOfCon(conSpan, root, trees);
+					tree = trees.get(0);
+					directNode.agentTree = tree;
+				}
+			}
+			
+			// find target trees
 			for (int i=0;i<directNode.targets.size();i++){
 				int targetStart = directNode.targetStarts.get(i);
 				int targetEnd = targetStart + directNode.targets.get(i).split(" ").length-1;
@@ -111,18 +137,64 @@ public class ASentence {
 	public void alignGoldStandard() throws GateException{
 		System.out.println("----- gold standard eTargets -----");
 		for (DirectNode bishan:this.bishanDirects){
-			System.out.println("<"+bishan.agent+">");
-			System.out.println(bishan.opinionSpan);
 			ArrayList<Annotation> subjAnnos = findMatchingSubjMarkup(bishan, this.annotations);
+			ArrayList<Annotation> sourceAnnos = new ArrayList<Annotation>();
 			ArrayList<Annotation> eTargetAnnos = new ArrayList<Annotation>();
+			
+			
+			if (subjAnnos.size()>1){
+				WTF.contro++;
+				int pos = 0;
+				int neg = 0;
+				String source = "";
+				boolean flag = false;
+				for (Annotation subjAnno:subjAnnos){
+					String polarity = "";
+					if (subjAnno.getFeatures().containsKey("polarity")){
+						polarity = subjAnno.getFeatures().get("polarity").toString();
+					}
+					else if (subjAnno.getFeatures().containsKey("attitude-type")){
+						polarity = subjAnno.getFeatures().get("attitude-type").toString();
+					}
+					
+					if (polarity.contains("pos"))
+						pos++;
+					else if (polarity.contains("neg"))
+						neg++;
+					
+					if (subjAnno.getFeatures().containsKey("nested-source")){
+						if (source.isEmpty())
+							source = subjAnno.getFeatures().get("nested-source").toString();
+						else
+							if (!source.equals(subjAnno.getFeatures().get("nested-source").toString()))
+								flag = true;
+					}
+				}
+				if (pos > 0 && neg > 0)
+					WTF.polarityContro++;
+				if (flag)
+					WTF.sourceContro++;
+			}
+			
+			
+			
 			for (Annotation subjAnno:subjAnnos){
-				ArrayList<Annotation> tmp = findMatchingETargetMarkup(bishan, subjAnno, this.annotations);
+				// find gs source
+				Annotation source = findMathcingSourceMarkup(subjAnno, this.annotations);
+				if (source != null)
+					sourceAnnos.add(source);
+				// fing gs etargets
+				ArrayList<Annotation> tmp = findMatchingETargetMarkup(subjAnno, this.annotations);
 				for (Annotation anno:tmp){
 					if (!eTargetAnnos.contains(anno))
 						eTargetAnnos.add(anno);
 				}
 			}
+			bishan.agentGS.addAll(findMatchingHeads(sourceAnnos, this.root));
 			bishan.eTargetsGS.addAll(findMatchingHeads(eTargetAnnos, this.root));
+			
+			System.out.println("<"+bishan.agentGS+">");
+			System.out.println(bishan.opinionSpan);
 			System.out.println(bishan.eTargetsGS);
 		}
 		
@@ -134,8 +206,14 @@ public class ASentence {
 		
 		for (Annotation eTarget:eTargetAnnos){
 			String eTargetSpan = this.content.getContent(eTarget.getStartNode().getOffset(), eTarget.getEndNode().getOffset()).toString();
+			String lastName = "";
+			if (eTargetSpan.contains(" "))
+				lastName = eTargetSpan.split(" ")[eTargetSpan.split(" ").length-1];
+			else
+				lastName = eTargetSpan;
+			
 			for (Tree leaf:root.getLeaves()){
-				if (eTargetSpan.equals(leaf.nodeString())  &&  !heads.contains(leaf))
+				if (lastName.equals(leaf.nodeString())  &&  !heads.contains(leaf))
 					heads.add(leaf);
 			}
 		}
@@ -143,7 +221,29 @@ public class ASentence {
 		return heads;
 	}
 	
-	private ArrayList<Annotation> findMatchingETargetMarkup(DirectNode direct, Annotation subjAnno, AnnotationSet markups){
+	private Annotation findMathcingSourceMarkup(Annotation subjAnno, AnnotationSet markups){
+		if (!subjAnno.getFeatures().containsKey("nested-source"))
+			return null;
+		
+		ArrayList<Annotation> tmp = new ArrayList<Annotation>();
+		
+		FeatureMap params = subjAnno.getFeatures();
+		String sourceId = params.get("nested-source").toString();
+		
+		Set<Annotation> sources = markups.get("agent");
+		for (Annotation source:sources){
+			FeatureMap paramSource = source.getFeatures();
+			if (paramSource.containsKey("nested-source") && paramSource.get("nested-source").equals(sourceId))
+				tmp.add(source);
+		}
+		
+		if (!tmp.isEmpty() && tmp.size()>0)
+			return tmp.get(0);
+		else
+			return null;
+	}
+	
+	private ArrayList<Annotation> findMatchingETargetMarkup(Annotation subjAnno, AnnotationSet markups){
 		ArrayList<Annotation> eTargets = new ArrayList<Annotation>();
 		ArrayList<String> eTargetIds = new ArrayList<String>(); 
 		
@@ -577,6 +677,9 @@ public class ASentence {
 			}
 		}  // each constituent
 		
+		if (tmp.isEmpty() || tmp.size()==0)
+			return "";
+		
 		String conSpan = tmp.get(0).toSentenceString(wordsTmp);
 		
 		return conSpan;
@@ -626,10 +729,270 @@ public class ASentence {
 		}
 	}
 	
-	
-	
-	
-	
-	
-
+public void writeForPSL(HashMap<Integer, HashMap<Integer,Double>> targets) throws IOException{
+		
+		HashSet<Integer> etargets = new HashSet<Integer>();
+		
+		HashMap<Integer, Double> gfs = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> bfs = new HashMap<Integer, Double>();
+		HashMap<Integer, HashMap<Integer, Double>> agents = new HashMap<Integer, HashMap<Integer, Double>>();
+		HashMap<Integer, HashMap<Integer, Double>> themes = new HashMap<Integer, HashMap<Integer, Double>>();
+		
+		HashMap<Integer, HashMap<Integer, Double>> sources = new HashMap<Integer, HashMap<Integer, Double>>();
+		
+		HashMap<Integer, Double> positives = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> negatives = new HashMap<Integer, Double>();
+		
+		/*
+		 * open the output file from SVM classifier
+		 */
+		
+		for (DirectNode directNode:this.bishanDirects){
+			if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
+				continue;
+			
+			ArrayList<Feature> features = directNode.features;
+			
+			List<Tree> leaves = directNode.root.getLeaves();
+			etargets.add(-1*directNode.opinionStart);
+			for (int t=0;t<directNode.eTargets.size();t++){
+				Tree etarget = directNode.eTargets.get(t);
+				Feature feature = features.get(t);
+				
+				int eTargetIndex = leaves.indexOf(etarget);
+				etargets.add(eTargetIndex);
+				
+				// gfbf triples
+				if (feature.isGF != 0){
+					gfs.put(eTargetIndex, feature.isGF);
+				}
+				if (feature.isBF != 0){
+					bfs.put(eTargetIndex, feature.isBF);
+				}
+				
+				Triple triple = Overlap.tripleListContains(etarget, directNode.gfbfTriples);
+				if (triple != null){
+					// agents
+					for (Tree agentTree:triple.agent){
+						if ( agents.containsKey(eTargetIndex) ){
+							HashMap<Integer, Double> tmp = agents.get(eTargetIndex);
+							tmp.put(leaves.indexOf(agentTree), 1.0);
+						}
+						else{
+							HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+							tmp.put(leaves.indexOf(agentTree), 1.0);
+							agents.put(eTargetIndex, tmp);
+						}
+					}
+					// themes
+					for (Tree themeTree:triple.theme){
+						if ( themes.containsKey(eTargetIndex) ){
+							HashMap<Integer, Double> tmp = themes.get(eTargetIndex);
+							tmp.put(leaves.indexOf(themeTree), 1.0);
+						}
+						else{
+							HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+							tmp.put(leaves.indexOf(themeTree), 1.0);
+							themes.put(eTargetIndex, tmp);
+						}
+					}
+				}
+				
+				
+				/*
+				// targets
+				// read from Doc class input
+				*/
+				
+			}   // each etarget
+			
+			// source
+			if (!directNode.agentGS.isEmpty() && directNode.agentGS.size()>0){
+				int tmpSourceIndex = directNode.root.getLeaves().indexOf(directNode.agentGS.get(0));
+				etargets.add(tmpSourceIndex);
+				HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+				tmp.put(tmpSourceIndex, 1.0);
+				sources.put(-1*directNode.opinionStart, tmp);
+			}
+			else{
+				etargets.add(0);
+				HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+				tmp.put(0, 1.0);
+				sources.put(-1*directNode.opinionStart, tmp);
+			}
+		
+			// positive
+			if (directNode.polarity.equals("positive")){
+				positives.put(-1*directNode.opinionStart, 1.0);
+			}
+			if (directNode.polarity.equals("negative")){
+				negatives.put(-1*directNode.opinionStart, 1.0);
+			}
+		
+		}  // each direct node
+		
+		
+		/*
+		 * write into files
+		 */
+		if (etargets.isEmpty())
+			return;
+		
+		// write etarget
+		File f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".etargets");
+		FileWriter fw = new FileWriter(f);
+		BufferedWriter bw = new BufferedWriter(fw);
+		
+		if (!etargets.isEmpty()){
+			for (Integer id:etargets){
+				bw.write(String.valueOf(id));
+				bw.newLine();
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		// write gf
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".gfs");
+		fw = new FileWriter(f);
+		bw = new BufferedWriter(fw);
+		
+		if (!gfs.isEmpty()){
+			for (Integer id:gfs.keySet()){
+				bw.write(String.valueOf(id)+"\t"+String.valueOf(gfs.get(id)));
+				bw.newLine();
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		// write bf
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".bfs");
+		fw = new FileWriter(f);
+		bw = new BufferedWriter(fw);
+		
+		if (!bfs.isEmpty()){
+			for (Integer id:bfs.keySet()){
+				bw.write(String.valueOf(id)+"\t"+String.valueOf(bfs.get(id)));
+				bw.newLine();
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		// write positive
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".positives");
+		fw = new FileWriter(f);
+		bw = new BufferedWriter(fw);
+		
+		if (!positives.isEmpty()){
+			for (Integer id:positives.keySet()){
+				bw.write(String.valueOf(id)+"\t"+String.valueOf(positives.get(id)));
+				bw.newLine();
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		// write negative
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".negatives");
+		fw = new FileWriter(f);
+		bw = new BufferedWriter(fw);
+		
+		if (!negatives.isEmpty()){
+			for (Integer id:negatives.keySet()){
+				bw.write(String.valueOf(id)+"\t"+String.valueOf(negatives.get(id)));
+				bw.newLine();
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		// write agent
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".agents");
+		fw = new FileWriter(f);
+		bw = new BufferedWriter(fw);
+		
+		if (!agents.isEmpty()){
+			for (Integer id1:agents.keySet()){
+				if (!agents.get(id1).isEmpty()){
+					for (Integer id2:agents.get(id1).keySet()){
+						bw.write( String.valueOf(id1)+"\t"+String.valueOf(id2)+"\t"+String.valueOf(agents.get(id1).get(id2)) );
+						bw.newLine();
+					}
+				}
+				
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		// write theme
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".themes");
+		fw = new FileWriter(f);
+		bw = new BufferedWriter(fw);
+		
+		if (!themes.isEmpty()){
+			for (Integer id1:themes.keySet()){
+				if (!themes.get(id1).isEmpty()){
+					for (Integer id2:themes.get(id1).keySet()){
+						bw.write( String.valueOf(id1)+"\t"+String.valueOf(id2)+"\t"+String.valueOf(themes.get(id1).get(id2)) );
+						bw.newLine();
+					}
+				}
+				
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		// write source
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".sources");
+		fw = new FileWriter(f);
+		bw = new BufferedWriter(fw);
+		
+		if (!sources.isEmpty()){
+			for (Integer id1:sources.keySet()){
+				if (!sources.get(id1).isEmpty()){
+					for (Integer id2:sources.get(id1).keySet()){
+						bw.write( String.valueOf(id1)+"\t"+String.valueOf(id2)+"\t"+String.valueOf(sources.get(id1).get(id2)) );
+						bw.newLine();
+					}
+				}
+				
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		// write target
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"PSL"+String.valueOf(this.sentenceIndex)+".targets");
+		fw = new FileWriter(f);
+		bw = new BufferedWriter(fw);
+		
+		if (!targets.isEmpty()){
+			for (Integer id1:targets.keySet()){
+				if (!targets.get(id1).isEmpty()){
+					for (Integer id2:targets.get(id1).keySet()){
+						bw.write( String.valueOf(id1)+"\t"+String.valueOf(id2)+"\t"+String.valueOf(targets.get(id1).get(id2)) );
+						bw.newLine();
+					}
+				}
+				
+			}
+		}
+		
+		bw.close();
+		fw.close();
+		
+		return;
+	}
 }

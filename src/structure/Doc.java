@@ -93,6 +93,7 @@ public class Doc {
 			read();
 		
 		for (ASentence sentence:this.sentences){
+			sentence.docId = this.docId;
 			this.parse.parseSentence(sentence);
 			
 		}
@@ -325,9 +326,13 @@ public class Doc {
 		FileWriter fw = new FileWriter(f);
 		BufferedWriter bw = new BufferedWriter(fw);
 		
-		File tf = new File(Path.getFeatureRoot()+docId+"/"+"etargetsId.txt");
+		File tf = new File(Path.getFeatureRoot()+docId+"/"+"svmFeatures.etargetId");
 		FileWriter tfw = new FileWriter(tf);
 		BufferedWriter tbw = new BufferedWriter(tfw);
+		
+		File df = new File(Path.getFeatureRoot()+docId+"/"+"svmFeatures.docId");
+		FileWriter dfw = new FileWriter(df);
+		BufferedWriter dbw = new BufferedWriter(dfw);
 		
 		
 		if (Statistics.unigramCon.isEmpty() || Statistics.unigramCon.size() == 0 ||
@@ -355,10 +360,15 @@ public class Doc {
 					//feature.print();
 					feature.write(bw);
 					Integer id = directNode.root.getLeaves().indexOf(directNode.eTargets.get(i));
+					tbw.write(String.valueOf(aSentence.sentenceIndex));
+					tbw.write("\t");
 					tbw.write(String.valueOf(-1*directNode.opinionStart));
 					tbw.write("\t");
 					tbw.write(String.valueOf(id));
 					tbw.newLine();
+					
+					dbw.write(this.docId);
+					dbw.newLine();
 				}
 				
 			}
@@ -369,7 +379,12 @@ public class Doc {
 		
 		tbw.close();
 		tfw.close();
+		
+		dbw.close();
+		dfw.close();
 	}
+	
+	
 	
 	public void statistics(){
 		for (ASentence aSentence:this.sentences){
@@ -377,11 +392,15 @@ public class Doc {
 				if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
 					continue;
 				
+				Statistics.gsNum += directNode.eTargetsGS.size();
 				this.gsNum += directNode.eTargetsGS.size();
+				Statistics.autoNum += directNode.eTargets.size();
 				this.autoNum += directNode.eTargets.size();
 				for (Tree eTarget:directNode.eTargetsGS){
-					if (directNode.eTargets.contains(eTarget))
+					if (directNode.eTargets.contains(eTarget)){
 						this.corretNum += 1;
+						Statistics.correctNum += 1;
+					}
 				}
 			}
 		}
@@ -394,109 +413,61 @@ public class Doc {
 		System.out.println("F-measure:"+(2*recall*precision)/(recall+precision));
 	}
 	
-	public void writeForPSL(){
+	public void writeForPSL() throws IOException{
+		System.out.println(" ===== write into PSL files =====");
 		
-		HashSet<Integer> etargets = new HashSet<Integer>();
+		File f = new File(Path.getPSLRoot()+this.docId+"/"+"svmFeatures.etargetId");
+		FileReader fr = new FileReader(f);
+		BufferedReader br = new BufferedReader(fr);
+		ArrayList<String> ids = new ArrayList<String>();
+		String line = "";
+		while ( (line=br.readLine()) != null ){
+			ids.add(line);
+		}
+		br.close();
+		fr.close();
 		
-		HashMap<Integer, Double> gfs = new HashMap<Integer, Double>();
-		HashMap<Integer, Double> bfs = new HashMap<Integer, Double>();
-		HashMap<Integer, HashMap<Integer, Double>> agents = new HashMap<Integer, HashMap<Integer, Double>>();
-		HashMap<Integer, HashMap<Integer, Double>> themes = new HashMap<Integer, HashMap<Integer, Double>>();
-		
-		HashMap<Integer, HashMap<Integer, Double>> sources = new HashMap<Integer, HashMap<Integer, Double>>();
-		HashMap<Integer, HashMap<Integer, Double>> targets = new HashMap<Integer, HashMap<Integer, Double>>();
-		
-		HashMap<Integer, Double> positives = new HashMap<Integer, Double>();
-		HashMap<Integer, Double> negatives = new HashMap<Integer, Double>();
-		
-		/*
-		 * open the output file from SVM classifier
-		 */
-		
-		
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"svmFeatures.output");
+		fr = new FileReader(f);
+		br = new BufferedReader(fr);
+		ArrayList<Double> scores = new ArrayList<Double>();
+		line = "";
+		while ( (line=br.readLine()) != null ){
+			scores.add(Double.parseDouble(line));
+		}
+		br.close();
+		fr.close();
 		
 		for (ASentence aSentence:this.sentences){
-			for (DirectNode directNode:aSentence.bishanDirects){
-				if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
-					continue;
+			/*
+			 * write targets output from SVM here
+			 */
+			HashMap<Integer, HashMap<Integer,Double>> targets = new HashMap<Integer, HashMap<Integer, Double>>();
+			for (int l=0;l<ids.size();l++){
+				if (Integer.parseInt(ids.get(l).split("\t")[0]) != aSentence.sentenceIndex)
+						continue;
 				
-				ArrayList<Feature> features = directNode.features;
+				int directNodeId = Integer.parseInt(ids.get(l).split("\t")[1]);
+				int etargetId = Integer.parseInt(ids.get(l).split("\t")[2]);
+				Double score = scores.get(l);
 				
-				List<Tree> leaves = directNode.root.getLeaves();
-				etargets.add(-1*directNode.opinionStart);
-				for (int t=0;t<directNode.eTargets.size();t++){
-					Tree etarget = directNode.eTargets.get(t);
-					Feature feature = features.get(t);
-					
-					int eTargetIndex = leaves.indexOf(etarget);
-					etargets.add(eTargetIndex);
-					
-					// gfbf triples
-					if (feature.isGF != 0){
-						gfs.put(eTargetIndex, feature.isGF);
-					}
-					if (feature.isBF != 0){
-						bfs.put(eTargetIndex, feature.isBF);
-					}
-					
-					Triple triple = Overlap.tripleListContains(etarget, directNode.gfbfTriples);
-					if (triple != null){
-						// agents
-						for (Tree agentTree:triple.agent){
-							if ( agents.containsKey(eTargetIndex) ){
-								HashMap<Integer, Double> tmp = agents.get(eTargetIndex);
-								tmp.put(leaves.indexOf(agentTree), 1.0);
-							}
-							else{
-								HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
-								tmp.put(leaves.indexOf(agentTree), 1.0);
-								agents.put(eTargetIndex, tmp);
-							}
-						}
-						// themes
-						for (Tree themeTree:triple.theme){
-							if ( themes.containsKey(eTargetIndex) ){
-								HashMap<Integer, Double> tmp = themes.get(eTargetIndex);
-								tmp.put(leaves.indexOf(themeTree), 1.0);
-							}
-							else{
-								HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
-								tmp.put(leaves.indexOf(themeTree), 1.0);
-								themes.put(eTargetIndex, tmp);
-							}
-						}
-					}
-					
-					
-					// targets
-					if (targets.containsKey(directNode.opinionStart)){
-						HashMap<Integer, Double> tmp = targets.get(directNode.opinionStart);
-						tmp.put(eTargetIndex, 1.0);
-						targets.put(directNode.opinionStart, tmp);
-					}
-					else{
-						HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
-						tmp.put(eTargetIndex, 1.0);
-						targets.put(directNode.opinionStart, tmp);
-					}
-					
-				}   // each etarget
-				
-				// source
-				etargets.add(directNode.agentStart);
-				HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
-				tmp.put(directNode.agentStart, 1.0);
-				agents.put(directNode.opinionStart, tmp);
-			
-				// positive
-				if (directNode.polarity.equals("positive")){
-					positives.put(-1*directNode.opinionStart, 1.0);
+				if (targets.containsKey(directNodeId) ){
+					HashMap<Integer, Double> tmp = targets.get(directNodeId);
+					tmp.put(etargetId, score);
+					targets.put(directNodeId, tmp);
 				}
-				if (directNode.polarity.equals("negative")){
-					negatives.put(-1*directNode.opinionStart, 1.0);
+				else{
+					HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+					tmp.put(etargetId, score);
+					targets.put(directNodeId, tmp);
 				}
+			}
 			
-			}  // each direct node
+			
+			/*
+			 * write the other components
+			 */
+			aSentence.writeForPSL(targets);
 		}
 	}
 	

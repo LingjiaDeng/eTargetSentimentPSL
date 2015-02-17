@@ -36,6 +36,7 @@ import structure.ASentence;
 import structure.DirectNode;
 import utils.Overlap;
 import utils.Syntax;
+import utils.WTF;
 import gate.Annotation;
 import gate.AnnotationSet;
 import gate.Document;
@@ -78,16 +79,96 @@ public class ReadGATE {
 			ASentence aSentence = this.sentenceHash.get(sentenceIndex);
 			
 			if (this.bishanSentenceHash.containsKey(sentenceIndex)){
-				aSentence.bishanDirects = this.bishanSentenceHash.get(sentenceIndex);
-				aSentence.sentenceTokenizedString = aSentence.bishanDirects.get(0).sentence;
-				if (aSentence.bishanDirects.get(0).opinionStart == -1)
+				ArrayList<DirectNode> bishanAlls = this.bishanSentenceHash.get(sentenceIndex);
+				
+				aSentence.sentenceTokenizedString = bishanAlls.get(0).sentence;
+				
+				if (bishanAlls.get(0).opinionStart == -1)
 					aSentence.bishanDirects = new ArrayList<DirectNode>();
-			}
+				else{
+					aSentence.bishanDirects = new ArrayList<DirectNode>();
+					for (DirectNode directNode:bishanAlls){
+						ArrayList<Annotation> subjAnnos = findMatchingSubjMarkup(aSentence.sentenceTokenizedString,
+								directNode, aSentence.annotations);
+						//if (!subjAnnos.isEmpty() && subjAnnos.size() ==1){
+						//	aSentence.bishanDirects.add(directNode);
+						//}
+						if (judgeSingleSourceSinglePolarity(subjAnnos)){
+							aSentence.bishanDirects.add(directNode);
+						}
+						//aSentence.bishanDirects.add(directNode);
+					}
+				}  // else
+			}   //  if has sentence
 			
 			sentences.add(aSentence);
 		}
 		
 		return sentences;
+	}
+	
+	private boolean judgeSingleSourceSinglePolarity(ArrayList<Annotation> subjAnnos){
+		int pos = 0;
+		int neg = 0;
+		String source = "";
+		boolean multiSourceflag = false;
+		for (Annotation subjAnno:subjAnnos){
+			String polarity = "";
+			if (subjAnno.getFeatures().containsKey("polarity")){
+				polarity = subjAnno.getFeatures().get("polarity").toString();
+			}
+			else if (subjAnno.getFeatures().containsKey("attitude-type")){
+				polarity = subjAnno.getFeatures().get("attitude-type").toString();
+			}
+			
+			if (polarity.contains("pos"))
+				pos++;
+			else if (polarity.contains("neg"))
+				neg++;
+			
+			if (subjAnno.getFeatures().containsKey("nested-source")){
+				if (source.isEmpty())
+					source = subjAnno.getFeatures().get("nested-source").toString();
+				else
+					if (!source.equals(subjAnno.getFeatures().get("nested-source").toString()))
+						multiSourceflag = true;
+			}
+		}
+		if ( (pos > 0 && neg > 0) || (multiSourceflag) )
+			return false;
+		else
+			return true;
+	}
+	
+	private ArrayList<Annotation> findMatchingSubjMarkup(String tokenizedSentence, DirectNode direct, AnnotationSet markups) throws GateException{
+		ArrayList<Annotation> subjs  = new ArrayList<Annotation>();
+		
+		String opinionSpan = direct.opinionSpan;
+		int opinionStart = tokenizedSentence.indexOf(opinionSpan);
+		int opinionEnd = opinionStart + opinionSpan.length();
+		
+		Set<String> subjNames = new HashSet<String>();
+		subjNames.add("sentiment");
+		subjNames.add("ESE-polar");
+		AnnotationSet subjAnnos = markups.get(subjNames);
+		
+		// works as the same function:
+		// insides.get(0)
+		Long sentenceStart = (long) -1;
+		for (Annotation inside:markups.get("inside")){
+			sentenceStart =  inside.getStartNode().getOffset();
+		}
+		
+		for (Annotation subjAnno:subjAnnos){
+			int annoStart = (int) (subjAnno.getStartNode().getOffset() - sentenceStart);
+			int annoEnd = (int) (subjAnno.getEndNode().getOffset() - sentenceStart);
+			if (Overlap.intervalOverlap(opinionStart, opinionEnd, annoStart, annoEnd)){
+				//System.out.println("!!!"+this.content.getContent(subjAnno.getStartNode().getOffset(), subjAnno.getEndNode().getOffset()).toString());
+				subjs.add(subjAnno);
+			}
+		}
+		
+		return subjs;
 	}
 	
 	/*

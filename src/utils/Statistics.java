@@ -8,11 +8,24 @@ public class Statistics {
 	public static HashSet<String> unigramDep;
 	public static HashSet<String> bigramDep;
 	
+	public static int gsNum;
+	public static int autoNum;
+	public static int correctNum;
+	
+	public static int directNodeNum;
+	
 	public Statistics(){
-		this.unigramCon = new HashSet<String>();
-		this.bigramCon = new HashSet<String>();
-		this.unigramDep = new HashSet<String>();;
-		this.bigramDep = new HashSet<String>();;
+		Statistics.unigramCon = new HashSet<String>();
+		Statistics.bigramCon = new HashSet<String>();
+		Statistics.unigramDep = new HashSet<String>();
+		Statistics.bigramDep = new HashSet<String>();
+		
+		Statistics.gsNum = 0;
+		Statistics.autoNum = 0;
+		Statistics.correctNum = 0;
+		
+		Statistics.directNodeNum = 0;
+		
 		
 	}
 

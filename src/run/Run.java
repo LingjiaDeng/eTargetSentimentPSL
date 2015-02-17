@@ -20,6 +20,7 @@ import utils.Path;
 import utils.Clean;
 import utils.Statistics;
 import utils.Syntax;
+import utils.WTF;
 
 public class Run {
 	public static void main(String[] args) throws IOException, GateException{
@@ -30,6 +31,7 @@ public class Run {
 		GFBF gfbfLexicon = new GFBF();
 		Clean remove = new Clean();
 		Statistics statistics = new Statistics();
+		WTF wtf = new WTF(); 
 		
 		Syntax parser = new Syntax();
 		parser.multiSentenceNum = 0;
@@ -44,8 +46,8 @@ public class Run {
 		while ( (docId=br.readLine())!= null ){
 			index++;
 			
-			if (index > 0  )
-				break;
+			if (index == 58  )
+				continue;
 			System.out.println("............"+index+"............."+docId);
 			Doc doc = new Doc(docId);
 			doc.read();
@@ -54,10 +56,6 @@ public class Run {
 			doc.countFeatures();
 			
 			doc.statistics();
-			
-			gsNum += doc.gsNum;
-			autoNum += doc.autoNum;
-			corretNum += doc.corretNum;
 			
 			docs.add(doc);
 			
@@ -68,6 +66,9 @@ public class Run {
 		br.close();
 		fr.close();
 		
+		System.out.println(WTF.contro);
+		System.out.println(WTF.polarityContro);
+		System.out.println(WTF.sourceContro);
 		
 		// print for SVM
 		for (Doc doc:docs){
@@ -75,20 +76,25 @@ public class Run {
 			doc.writerFeatures();
 		}
 		
+		// print for PSL
 		for (Doc doc:docs){
-			doc.writeForPSL();
+			//doc.writeForPSL();
 		}
 		
 		
 		
 		
 		
+		
 		System.out.println("========== performance on corpus ========");
-		double recall = corretNum*1.0/gsNum;
-		double precision = corretNum*1.0/autoNum;
+		double recall = Statistics.correctNum*1.0/Statistics.gsNum;
+		double precision = Statistics.correctNum*1.0/Statistics.autoNum;
 		System.out.println("recall: "+recall);
 		System.out.println("precision: "+precision);
 		System.out.println("F-measure:"+(2*recall*precision)/(recall+precision));
+		
+		System.out.println("direct nodes: "+Statistics.directNodeNum);
+		System.out.println("gold standard eTargets: "+Statistics.gsNum);
 		
 		System.out.println("multiSentence: "+parser.multiSentenceNum);
 		

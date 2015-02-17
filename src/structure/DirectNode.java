@@ -13,6 +13,8 @@ public class DirectNode {
 	
 	public String agent;
 	public int agentStart;
+	public Tree agentTree;
+	public ArrayList<Tree> agentGS;
 	public String sentence;
 	public int sentenceIndex;
 	public String opinionSpan;
@@ -35,6 +37,7 @@ public class DirectNode {
 	public DirectNode(){
 	  this.agent = "";
 	  this.agentStart = -1;
+	  this.agentGS = new ArrayList<Tree>();
 	  this.sentence = "";
 	  this.sentenceIndex = -1;
 	  this.opinionSpan = "";
