@@ -365,6 +365,11 @@ public class Doc {
 					tbw.write(String.valueOf(-1*directNode.opinionStart));
 					tbw.write("\t");
 					tbw.write(String.valueOf(id));
+					tbw.write("\t");
+					if (feature.isCorrect)
+						tbw.write("1");
+					else
+						tbw.write("0");
 					tbw.newLine();
 					
 					dbw.write(this.docId);
@@ -450,6 +455,12 @@ public class Doc {
 				int directNodeId = Integer.parseInt(ids.get(l).split("\t")[1]);
 				int etargetId = Integer.parseInt(ids.get(l).split("\t")[2]);
 				Double score = scores.get(l);
+				// conversion from [-1,1] to [0,1]
+				score = score*0.5+0.5;
+				if (score <0)
+					score = 0.0;
+				else if (score > 1)
+					score = 1.0;
 				
 				if (targets.containsKey(directNodeId) ){
 					HashMap<Integer, Double> tmp = targets.get(directNodeId);

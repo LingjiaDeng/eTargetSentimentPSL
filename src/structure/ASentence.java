@@ -746,7 +746,8 @@ public void writeForPSL(HashMap<Integer, HashMap<Integer,Double>> targets) throw
 		/*
 		 * open the output file from SVM classifier
 		 */
-		
+		System.out.println("===============");
+		System.out.println(this.sentenceTokenizedString);
 		for (DirectNode directNode:this.bishanDirects){
 			if (directNode.eTargetsGS.isEmpty() || directNode.eTargetsGS.size() == 0)
 				continue;
@@ -828,13 +829,23 @@ public void writeForPSL(HashMap<Integer, HashMap<Integer,Double>> targets) throw
 			if (directNode.polarity.equals("negative")){
 				negatives.put(-1*directNode.opinionStart, 1.0);
 			}
+			
+			System.out.println("-----------");
+			System.out.println(-1*directNode.opinionStart+" "+directNode.opinionSpan);
+			System.out.print("sources: ");
+			System.out.println(sources);
+			System.out.print("targets: ");
+			System.out.println(targets);
+			System.out.print("positives: ");
+			System.out.println(positives);
+			System.out.print("negatives: ");
+			System.out.println(negatives);
 		
 		}  // each direct node
 		
 		
 		/*
-		 * write into files
-		 */
+		
 		if (etargets.isEmpty())
 			return;
 		
@@ -992,6 +1003,8 @@ public void writeForPSL(HashMap<Integer, HashMap<Integer,Double>> targets) throw
 		
 		bw.close();
 		fw.close();
+		
+		*/
 		
 		return;
 	}

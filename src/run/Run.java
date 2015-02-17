@@ -46,8 +46,8 @@ public class Run {
 		while ( (docId=br.readLine())!= null ){
 			index++;
 			
-			if (index == 58  )
-				continue;
+			if (index > 0  )
+				break;
 			System.out.println("............"+index+"............."+docId);
 			Doc doc = new Doc(docId);
 			doc.read();
@@ -73,12 +73,12 @@ public class Run {
 		// print for SVM
 		for (Doc doc:docs){
 			//doc.generateFeatures();
-			doc.writerFeatures();
+			//doc.writerFeatures();
 		}
 		
 		// print for PSL
 		for (Doc doc:docs){
-			//doc.writeForPSL();
+			doc.writeForPSL();
 		}
 		
 		
