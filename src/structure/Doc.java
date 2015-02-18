@@ -484,6 +484,80 @@ public class Doc {
 		return;
 	}
 	
+	public void evaluateSVM() throws IOException{
+		File f = new File(Path.getPSLRoot()+this.docId+"/"+"svmFeatures.etargetId");
+		FileReader fr = new FileReader(f);
+		BufferedReader br = new BufferedReader(fr);
+		ArrayList<String> ids = new ArrayList<String>();
+		String line = "";
+		while ( (line=br.readLine()) != null ){
+			ids.add(line);
+		}
+		br.close();
+		fr.close();
+		
+		f = new File(Path.getPSLRoot()+this.docId+"/"+"svmFeatures.output");
+		fr = new FileReader(f);
+		br = new BufferedReader(fr);
+		ArrayList<Double> scores = new ArrayList<Double>();
+		line = "";
+		while ( (line=br.readLine()) != null ){
+			scores.add(Double.parseDouble(line));
+		}
+		br.close();
+		fr.close();
+		
+		for (ASentence aSentence:this.sentences){
+			if (aSentence.multiSentenceFlag)
+				continue;
+			
+			/*
+			 * write targets output from SVM here
+			 */
+			HashMap<Integer, HashMap<Integer,Double>> targets = new HashMap<Integer, HashMap<Integer, Double>>();
+			for (int l=0;l<ids.size();l++){
+				if (Integer.parseInt(ids.get(l).split("\t")[0]) != aSentence.sentenceIndex)
+						continue;
+				
+				int directNodeId = Integer.parseInt(ids.get(l).split("\t")[1]);
+				int etargetId = Integer.parseInt(ids.get(l).split("\t")[2]);
+				Double score = scores.get(l);
+				
+				if (targets.containsKey(directNodeId) ){
+					HashMap<Integer, Double> tmp = targets.get(directNodeId);
+					tmp.put(etargetId, score);
+					targets.put(directNodeId, tmp);
+				}
+				else{
+					HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+					tmp.put(etargetId, score);
+					targets.put(directNodeId, tmp);
+				}
+			}
+			
+			
+			/*
+			 * count here
+			 */
+			for (DirectNode directNode:aSentence.bishanDirects){
+				int directNodeId = -1*directNode.opinionStart;
+				for (Tree etarget:directNode.eTargets){
+					int etargetId = directNode.root.getLeaves().indexOf(etarget);
+					if (targets.containsKey(directNodeId) && 
+							targets.get(directNodeId).containsKey(etargetId) ){
+						Double score = targets.get(directNodeId).get(etargetId);
+						if (score > 0)
+							Statistics.autoNumSVM++;
+						if (score > 0 && directNode.eTargetsGS.contains(etarget))
+							Statistics.correctNumSVM++;
+					}
+				}
+			}
+			
+		}
+		return;
+	}
+	
 	public void evaluateDirectNodeETarget() throws IOException{
 		for (ASentence aSentence:this.sentences){
 			if (aSentence.multiSentenceFlag)
@@ -521,7 +595,7 @@ public class Doc {
 							if (pslScore > Statistics.PSLthreshold && directNode.eTargetsGS.contains(etarget)){
 								Statistics.correctNumAfterPSL++;
 							}
-							if (){
+							if (pslScore > Statistics.PSLthreshold){
 								Statistics.autoNumAfterPSL++;
 							}
 						}  // if match two ids

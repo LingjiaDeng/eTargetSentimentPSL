@@ -9,8 +9,14 @@ public class Statistics {
 	public static HashSet<String> bigramDep;
 	
 	public static int gsNum;
+	
 	public static int autoNum;
 	public static int correctNum;
+	
+	
+	public static int autoNumSVM;
+	public static int correctNumSVM;
+	
 	public static int autoNumAfterPSL;
 	public static int correctNumAfterPSL;
 	
@@ -27,6 +33,8 @@ public class Statistics {
 		Statistics.gsNum = 0;
 		Statistics.autoNum = 0;
 		Statistics.correctNum = 0;
+		Statistics.autoNumSVM = 0;
+		Statistics.correctNumSVM = 0;
 		Statistics.autoNumAfterPSL = 0;
 		Statistics.correctNumAfterPSL = 0;
 		

@@ -82,6 +82,7 @@ public class Run {
 		}
 		
 		for (Doc doc:docs){
+			doc.evaluateSVM();
 			doc.evaluateDirectNodeETarget();
 		}
 		
@@ -94,13 +95,33 @@ public class Run {
 		double recall = Statistics.correctNum*1.0/Statistics.gsNum;
 		double precision = Statistics.correctNum*1.0/Statistics.autoNum;
 		
+		System.out.println("# nodes I think are correct: "+Statistics.autoNum);
+		System.out.println("# nodes are correct: "+Statistics.correctNum);
+		
 		System.out.println("recall: "+recall);
 		System.out.println("precision: "+precision);
 		System.out.println("F-measure:"+(2*recall*precision)/(recall+precision));
+		System.out.println();
 		
+		System.out.println("# nodes I think are correct: "+Statistics.autoNumSVM);
+		System.out.println("# nodes are correct: "+Statistics.correctNumSVM);
+		
+		double recallSVM = Statistics.correctNumSVM*1.0/Statistics.gsNum;
+		double precisionSVM = Statistics.correctNumSVM*1.0/Statistics.autoNumSVM;
+		System.out.println("recall after PSL: "+recallSVM);
+		System.out.println("precision after PSL: "+precisionSVM);
+		System.out.println("F-measure:"+(2*recallSVM*precisionSVM)/(recallSVM+precisionSVM));
+		System.out.println();
+		
+		System.out.println("# nodes I think are correct: "+Statistics.autoNumAfterPSL);
+		System.out.println("# nodes are correct: "+Statistics.correctNumAfterPSL);
+		
+		double recallAfterPSL = Statistics.correctNumAfterPSL*1.0/Statistics.gsNum;
 		double precisionAfterPSL = Statistics.correctNumAfterPSL*1.0/Statistics.autoNumAfterPSL;
+		System.out.println("recall after PSL: "+recallAfterPSL);
 		System.out.println("precision after PSL: "+precisionAfterPSL);
-		System.out.println("F-measure:"+(2*recall*precisionAfterPSL)/(recall+precisionAfterPSL));
+		System.out.println("F-measure:"+(2*recallAfterPSL*precisionAfterPSL)/(recallAfterPSL+precisionAfterPSL));
+		System.out.println();
 		
 		System.out.println("direct nodes: "+Statistics.directNodeNum);
 		System.out.println("gold standard eTargets: "+Statistics.gsNum);
