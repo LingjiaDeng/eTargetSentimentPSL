@@ -61,6 +61,7 @@ public class ReadBishanTogether {
 					}
 				}  // for each sentiment DirectNode
 				
+				/*
 				// add the remaining unused holder DirectNode
 				for (DirectNode holder:holders){
 					if (!holder.overlapped){
@@ -69,6 +70,7 @@ public class ReadBishanTogether {
 						sentimentSens.put(holder.sentenceIndex, tmp);
 					}
 				}  // for each unused holder DirectNode
+				*/
 				
 				// filter out the neutral sentiments
 				ArrayList<DirectNode> tmp = new ArrayList<DirectNode>();

@@ -11,8 +11,12 @@ public class Statistics {
 	public static int gsNum;
 	public static int autoNum;
 	public static int correctNum;
+	public static int autoNumAfterPSL;
+	public static int correctNumAfterPSL;
 	
 	public static int directNodeNum;
+	
+	public static double PSLthreshold;
 	
 	public Statistics(){
 		Statistics.unigramCon = new HashSet<String>();
@@ -23,8 +27,12 @@ public class Statistics {
 		Statistics.gsNum = 0;
 		Statistics.autoNum = 0;
 		Statistics.correctNum = 0;
+		Statistics.autoNumAfterPSL = 0;
+		Statistics.correctNumAfterPSL = 0;
 		
 		Statistics.directNodeNum = 0;
+		
+		Statistics.PSLthreshold = 0.0;
 		
 		
 	}

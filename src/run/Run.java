@@ -78,7 +78,11 @@ public class Run {
 		
 		// print for PSL
 		for (Doc doc:docs){
-			doc.writeForPSL();
+			//doc.writeForPSL();
+		}
+		
+		for (Doc doc:docs){
+			doc.evaluateDirectNodeETarget();
 		}
 		
 		
@@ -89,9 +93,14 @@ public class Run {
 		System.out.println("========== performance on corpus ========");
 		double recall = Statistics.correctNum*1.0/Statistics.gsNum;
 		double precision = Statistics.correctNum*1.0/Statistics.autoNum;
+		
 		System.out.println("recall: "+recall);
 		System.out.println("precision: "+precision);
 		System.out.println("F-measure:"+(2*recall*precision)/(recall+precision));
+		
+		double precisionAfterPSL = Statistics.correctNumAfterPSL*1.0/Statistics.autoNumAfterPSL;
+		System.out.println("precision after PSL: "+precisionAfterPSL);
+		System.out.println("F-measure:"+(2*recall*precisionAfterPSL)/(recall+precisionAfterPSL));
 		
 		System.out.println("direct nodes: "+Statistics.directNodeNum);
 		System.out.println("gold standard eTargets: "+Statistics.gsNum);

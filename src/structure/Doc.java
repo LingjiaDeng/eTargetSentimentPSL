@@ -20,6 +20,7 @@ import gate.util.GateException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -480,6 +481,57 @@ public class Doc {
 			 */
 			aSentence.writeForPSL(targets);
 		}
+		return;
+	}
+	
+	public void evaluateDirectNodeETarget() throws IOException{
+		for (ASentence aSentence:this.sentences){
+			if (aSentence.multiSentenceFlag)
+				continue;
+			
+			int sentenceIndex = aSentence.sentenceIndex;
+			
+			ArrayList<String> lines = new ArrayList<String>();
+			File f = new File(Path.getPSLRoot()+this.docId+"/PSL"+String.valueOf(sentenceIndex)
+					+".targets.output");
+			if (!f.exists())
+				continue;
+			
+			FileReader fr = new FileReader(f);
+			BufferedReader br = new BufferedReader(fr);
+			String line = "";
+			while ( (line = br.readLine()) != null){
+				lines.add(line);
+			}
+			br.close();
+			fr.close();
+			
+			
+			for (DirectNode directNode: aSentence.bishanDirects){
+				int directNodeId = -1*directNode.opinionStart;
+				for (Tree etarget:directNode.eTargets){
+					int etargetId = directNode.root.getLeaves().indexOf(etarget);
+					for (String pslLine:lines){
+						if (pslLine.split("\t").length != 3)
+							continue;
+						
+						if (Integer.parseInt(pslLine.split("\t")[0]) == directNodeId &&
+								Integer.parseInt(pslLine.split("\t")[1]) == etargetId){
+							double pslScore = Double.parseDouble(pslLine.split("\t")[2]);
+							if (pslScore > Statistics.PSLthreshold && directNode.eTargetsGS.contains(etarget)){
+								Statistics.correctNumAfterPSL++;
+							}
+							if (){
+								Statistics.autoNumAfterPSL++;
+							}
+						}  // if match two ids
+							
+					}  // for pslLine
+				}  // each etarget
+			}  // each direct node
+		}  // each sentence
+		
+		return;
 	}
 	
 	/*

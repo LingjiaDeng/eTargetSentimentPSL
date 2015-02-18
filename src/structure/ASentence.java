@@ -844,7 +844,6 @@ public void writeForPSL(HashMap<Integer, HashMap<Integer,Double>> targets) throw
 		}  // each direct node
 		
 		
-		/*
 		
 		if (etargets.isEmpty())
 			return;
@@ -1004,7 +1003,7 @@ public void writeForPSL(HashMap<Integer, HashMap<Integer,Double>> targets) throw
 		bw.close();
 		fw.close();
 		
-		*/
+		
 		
 		return;
 	}
